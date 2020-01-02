@@ -10,9 +10,11 @@ import time
 from donkeycar.parts.network import MQTTValueSub, MQTTValuePub
 from donkeycar.parts.image import JpgToImgArr
 
+import numpy as np
+
 class DonkeyRemoteContoller:
     def __init__(self, donkey_name, mqtt_broker, sensor_size=(120, 160, 3)):
-        self.camera_sub = MQTTValueSub("donkey/%s/camera" % donkey_name, broker=mqtt_broker)
+        self.camera_sub = MQTTValueSub("donkey/%s/camera" % donkey_name, broker=mqtt_broker)#, def_value=(np.zeros((40, 40)), {"cte": 0}))
         self.controller_pub = MQTTValuePub("donkey/%s/controls" % donkey_name, broker=mqtt_broker)
         self.jpgToImg = JpgToImgArr()
         self.sensor_size = sensor_size
@@ -34,9 +36,19 @@ class DonkeyRemoteContoller:
         return self.img
 
     def observe(self):
+        
         jpg = self.camera_sub.run()
+        
+        #data = self.camera_sub.run()
+        # #print("State: {}".format(state))
+        
+        # #jpg, info = state
         self.img = self.jpgToImg.run(jpg)
-        return self.img
+        # return self.img#, info
 
+        return self.img
+        #return self.camera_sub.run()
+        
+        
 
     

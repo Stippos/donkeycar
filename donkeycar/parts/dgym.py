@@ -20,12 +20,17 @@ class DonkeyGymEnv(object):
     def update(self):
         while self.running:
             self.frame, _, _, self.info = self.env.step(self.action)
+            if self.action == [0, 0]:
+                self.env.reset()
+            #if self.info["cte"] > 2.5 or self.info["cte"] < -2:
+                #self.env.reset()
 
     def run_threaded(self, steering, throttle):
         if steering is None or throttle is None:
             steering = 0.0
             throttle = 0.0
         self.action = [steering, throttle]
+        #return {"frame": self.frame, "info": self.info}
         return self.frame
 
     def shutdown(self):
