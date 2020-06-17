@@ -11,7 +11,7 @@
 # import os
 # 
 
-DONKEY_UNIQUE_NAME = "kari"
+DONKEY_UNIQUE_NAME = "Kari"
 MQTT_BROKER = "mqtt.eclipse.org"
 
 # #PATHS
@@ -202,7 +202,7 @@ DRIVE_LOOP_HZ = 20      # the vehicle loop will pause if faster than this speed.
 # #You will want to download the simulator binary from: https://github.com/tawnkramer/donkey_gym/releases/download/v18.9/DonkeySimLinux.zip
 # #then extract that and modify DONKEY_SIM_PATH.
 DONKEY_GYM = True
-DONKEY_SIM_PATH = "../../DonkeySimLinux/donkey_sim.x86_64" #"/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
+DONKEY_SIM_PATH = "../../DonkeySimLinux/DonkeySim.exe" #"/home/tkramer/projects/sdsandbox/sdsim/build/DonkeySimLinux/donkey_sim.x86_64"
 DONKEY_GYM_ENV_NAME = "donkey-generated-roads-v0" # ("donkey-generated-track-v0"|"donkey-generated-roads-v0"|"donkey-warehouse-v0"|"donkey-avc-sparkfun-v0")
 # 
 # #publish camera over network
