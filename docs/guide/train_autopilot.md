@@ -23,7 +23,7 @@ In a new terminal session on your host PC use rsync to copy your cars
 folder from the Raspberry Pi.
 
 ```bash
-rsync -rv --show-progress --partial pi@<your_pi_ip_address>:~/mycar/data/  ~/mycar/data/
+rsync -rv --progress --partial pi@<your_pi_ip_address>:~/mycar/data/  ~/mycar/data/
 ```
 
 ## Train a model
@@ -42,17 +42,24 @@ python ~/mycar/manage.py train --model ~/mycar/models/mypilot.h5
 
 * You can create different model types with the `--type` argument during training. You may also choose to change the default model type in myconfig.py `DEFAULT_MODEL_TYPE`. When specifying a new model type, be sure to provide that type when running the model, or using the model in other tools like plotting or profiling. For more information on the different model types, look here for [Keras Parts](/parts/keras).
 
-* Now you can use rsync again to move your pilot back to your car.
+## Copy model back to car
+
+* In previous step we managed to get a model trained on the data. Now is time to move the model back to Rasberry Pi, so we can use it for testing it if it will drive itself.
+
+* Use rsync again to move your trained model pilot back to your car.
 
 ```bash
-rsync -rv --show-progress --partial ~/mycar/models/ pi@<your_ip_address>:~/mycar/models/
+rsync -rv --progress --partial ~/mycar/models/ pi@<your_ip_address>:~/mycar/models/
 ```
+
+* Ensure to place car on the track so that it is ready to drive.
 
 * Now you can start your car again and pass it your model to drive.
 
 ```bash
 python manage.py drive --model ~/mycar/models/mypilot.h5
 ```
+* The car should start to drive on it's own, congratulations!
 
 ## [Optional] Use TensorRT on the Jetson Nano
 

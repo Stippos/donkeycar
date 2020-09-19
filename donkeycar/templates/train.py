@@ -58,10 +58,13 @@ except:
 '''
 Tub management
 '''
+
+
 def make_key(sample):
     tub_path = sample['tub_path']
     index = sample['index']
     return tub_path + str(index)
+
 
 def make_next_key(sample, index_offset):
     tub_path = sample['tub_path']
@@ -190,7 +193,7 @@ class MyCPCallback(keras.callbacks.ModelCheckpoint):
     '''
 
     def __init__(self, send_model_cb=None, cfg=None, *args, **kwargs):
-        super(MyCPCallback, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.reset_best_end_of_epoch = False
         self.send_model_cb = send_model_cb
         self.last_modified_time = None
@@ -200,7 +203,7 @@ class MyCPCallback(keras.callbacks.ModelCheckpoint):
         self.reset_best_end_of_epoch = True
 
     def on_epoch_end(self, epoch, logs=None):
-        super(MyCPCallback, self).on_epoch_end(epoch, logs)
+        super().on_epoch_end(epoch, logs)
 
         if self.send_model_cb:
             '''
@@ -224,15 +227,10 @@ class MyCPCallback(keras.callbacks.ModelCheckpoint):
 
 def on_best_model(cfg, model, model_filename):
 
-    model.save(model_filename, include_optimizer=False)
-        
-    if not cfg.SEND_BEST_MODEL_TO_PI:
-        return
-
     on_windows = os.name == 'nt'
 
-    #If we wish, send the best model to the pi.
-    #On mac or linux we have scp:
+    # If we wish, send the best model to the pi.
+    # On mac or linux we have scp:
     if not on_windows:
         print('sending model to the pi')
         
@@ -286,7 +284,7 @@ def train(cfg, tub_names, model_name, transfer_model, model_type, continuous, au
     use the specified data in tub_names to train an artifical neural network
     saves the output trained model as model_name
     ''' 
-    verbose = cfg.VEBOSE_TRAIN
+    verbose = cfg.VERBOSE_TRAIN
 
     if model_type is None:
         model_type = cfg.DEFAULT_MODEL_TYPE
@@ -498,15 +496,15 @@ def train(cfg, tub_names, model_name, transfer_model, model_type, continuous, au
     
     model_path = os.path.expanduser(model_name)
 
-    
-    #checkpoint to save model after each epoch and send best to the pi.
-    save_best = MyCPCallback(send_model_cb=on_best_model,
-                                    filepath=model_path,
-                                    monitor='val_loss', 
-                                    verbose=verbose, 
-                                    save_best_only=True, 
-                                    mode='min',
-                                    cfg=cfg)
+    # checkpoint to save model after each epoch and send best to the pi.
+    send_model_cb = on_best_model if cfg.SEND_BEST_MODEL_TO_PI else None
+    save_best = MyCPCallback(send_model_cb=send_model_cb,
+                             filepath=model_path,
+                             monitor='val_loss',
+                             verbose=verbose,
+                             save_best_only=True,
+                             mode='min',
+                             cfg=cfg)
 
     train_gen = generator(save_best, opts, gen_records, cfg.BATCH_SIZE, True)
     val_gen = generator(save_best, opts, gen_records, cfg.BATCH_SIZE, False)
@@ -544,16 +542,16 @@ def go_train(kl, cfg, train_gen, val_gen, gen_records, model_name, steps_per_epo
     start = time.time()
 
     model_path = os.path.expanduser(model_name)
-
-    #checkpoint to save model after each epoch and send best to the pi.
+    send_model_cb = on_best_model if cfg.SEND_BEST_MODEL_TO_PI else None
+    # checkpoint to save model after each epoch and send best to the pi.
     if save_best is None:
-        save_best = MyCPCallback(send_model_cb=on_best_model,
-                                    filepath=model_path,
-                                    monitor='val_loss', 
-                                    verbose=verbose, 
-                                    save_best_only=True, 
-                                    mode='min',
-                                    cfg=cfg)
+        save_best = MyCPCallback(send_model_cb=send_model_cb,
+                                 filepath=model_path,
+                                 monitor='val_loss',
+                                 verbose=verbose,
+                                 save_best_only=True,
+                                 mode='min',
+                                 cfg=cfg)
 
     #stop training if the validation error stops improving.
     early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', 
@@ -582,7 +580,7 @@ def go_train(kl, cfg, train_gen, val_gen, gen_records, model_name, steps_per_epo
                     train_gen, 
                     steps_per_epoch=steps_per_epoch, 
                     epochs=epochs, 
-                    verbose=cfg.VEBOSE_TRAIN, 
+                    verbose=cfg.VERBOSE_TRAIN,
                     validation_data=val_gen,
                     callbacks=callbacks_list, 
                     validation_steps=val_steps,
@@ -687,80 +685,7 @@ def go_train(kl, cfg, train_gen, val_gen, gen_records, model_name, steps_per_epo
         # convert to uff
         # print("Saved TensorRT model:", uff_filename)
 
-    if cfg.PRUNE_CNN:
-        base_model_path = splitext(model_name)[0]
-        cnn_channels = get_total_channels(kl.model)
-        print('original model with {} channels'.format(cnn_channels))
-        prune_gen = SequencePredictionGenerator(gen_records, cfg)
-        target_channels = int(cnn_channels * (1 - (float(cfg.PRUNE_PERCENT_TARGET) / 100.0)))
-
-        print('Target channels of {0} remaining with {1:.00%} percent removal per iteration'.format(target_channels, cfg.PRUNE_PERCENT_PER_ITERATION / 100))
-        
-        from keras.models import load_model
-        prune_loss = 0
-        while cnn_channels > target_channels:
-            save_best.reset_best()
-            model, channels_deleted = prune(kl.model, prune_gen, 1, cfg)
-            cnn_channels -= channels_deleted
-            kl.model = model
-            kl.compile()
-            kl.model.summary()
-
-            #stop training if the validation error stops improving.
-            early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', 
-                                                        min_delta=cfg.MIN_DELTA, 
-                                                        patience=cfg.EARLY_STOP_PATIENCE, 
-                                                        verbose=verbose, 
-                                                        mode='auto')
-
-            history = kl.model.fit_generator(
-                        train_gen,
-                        steps_per_epoch=steps_per_epoch, 
-                        epochs=epochs, 
-                        verbose=cfg.VEBOSE_TRAIN,
-                        validation_data=val_gen,
-                        validation_steps=val_steps,
-                        workers=workers_count,
-                        callbacks=[early_stop],
-                        use_multiprocessing=use_multiprocessing)
-
-            prune_loss = min(history.history['val_loss'])
-            print('prune val_loss this iteration: {}'.format(prune_loss))
-
-            # If loss breaks the threshhold 
-            if prune_loss < max_val_loss:
-                model.save('{}_prune_{}_filters.h5'.format(base_model_path, cnn_channels))
-            else:
-                break
-
-        print('pruning stopped at {} with a target of {}'.format(cnn_channels, target_channels))
-
-
-class SequencePredictionGenerator(keras.utils.Sequence):
-    """
-    Provides a thread safe data generator for the Keras predict_generator for use with kerasergeon. 
-    """
-    def __init__(self, data, cfg):
-        data = list(data.values())
-        self.n = int(len(data) * cfg.PRUNE_EVAL_PERCENT_OF_DATASET)
-        self.data = data[:self.n]
-        self.batch_size = cfg.BATCH_SIZE
-        self.cfg = cfg
-
-    def __len__(self):
-        return int(np.ceil(len(self.data) / float(self.batch_size)))
-
-    def __getitem__(self, idx):
-        batch_data = self.data[idx * self.batch_size:(idx + 1) * self.batch_size]
-
-        images = []
-        for data in batch_data:
-            path = data['image_path']
-            img_arr = load_scaled_image_arr(path, self.cfg)
-            images.append(img_arr)
-
-        return np.array(images), np.array([])
-
+    
 def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, continuous, aug):
     '''
     use the specified data in tub_names to train an artifical neural network
@@ -773,9 +698,12 @@ def sequence_train(cfg, tub_names, model_name, transfer_model, model_type, conti
 
     kl = dk.utils.get_model_by_type(model_type=model_type, cfg=cfg)
     
+    if cfg.PRINT_MODEL_SUMMARY:
+        print(kl.model.summary())
+    
     tubs = gather_tubs(cfg, tub_names)
     
-    verbose = cfg.VEBOSE_TRAIN
+    verbose = cfg.VERBOSE_TRAIN
 
     records = []
 
@@ -1097,6 +1025,11 @@ if __name__ == "__main__":
     model = args['--model']
     transfer = args['--transfer']
     model_type = args['--type']
+
+    if model_type is None:
+        model_type = cfg.DEFAULT_MODEL_TYPE
+        print("using default model type of", model_type)
+
     if args['--figure_format']:
         figure_format = args['--figure_format']
     continuous = args['--continuous']

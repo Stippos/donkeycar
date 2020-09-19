@@ -1,11 +1,12 @@
 
-import sys
-import os
-import socket
 import shutil
 import argparse
 import json
-import time
+import uuid
+
+from socket import *
+import os
+from threading import Thread
 
 import donkeycar as dk
 from donkeycar.parts.datastore import Tub
@@ -64,7 +65,7 @@ class CreateCar(BaseCommand):
     def run(self, args):
         args = self.parse_args(args)
         self.create_car(path=args.path, template=args.template, overwrite=args.overwrite)
-    
+  
     def create_car(self, path, template='complete', overwrite=False):
         """
         This script sets up the folder structure for donkey to work.
@@ -91,10 +92,12 @@ class CreateCar(BaseCommand):
         config_template_path = os.path.join(TEMPLATES_PATH, 'cfg_' + template + '.py')
         myconfig_template_path = os.path.join(TEMPLATES_PATH, 'myconfig.py')
         train_template_path = os.path.join(TEMPLATES_PATH, 'train.py')
+        calibrate_template_path = os.path.join(TEMPLATES_PATH, 'calibrate.py')
         car_app_path = os.path.join(path, 'manage.py')
         car_config_path = os.path.join(path, 'config.py')
         mycar_config_path = os.path.join(path, 'myconfig.py')
         train_app_path = os.path.join(path, 'train.py')
+        calibrate_app_path = os.path.join(path, 'calibrate.py')        
         
         if os.path.exists(car_app_path) and not overwrite:
             print('Car app already exists. Delete it and rerun createcar to replace.')
@@ -113,6 +116,12 @@ class CreateCar(BaseCommand):
         else:
             print("Copying train script. Adjust these before starting your car.")
             shutil.copyfile(train_template_path, train_app_path)
+            
+        if os.path.exists(calibrate_app_path) and not overwrite:
+            print('Calibrate already exists. Delete it and rerun createcar to replace.')
+        else:
+            print("Copying calibrate script. Adjust these before starting your car.")
+            shutil.copyfile(calibrate_template_path, calibrate_app_path)
 
         if not os.path.exists(mycar_config_path):
             print("Copying my car config overrides")
@@ -128,7 +137,6 @@ class CreateCar(BaseCommand):
                     mcfg.write("# " + line)
             cfg.close()
             mcfg.close()
-
  
         print("Donkey setup complete.")
 
@@ -140,12 +148,14 @@ class UpdateCar(BaseCommand):
 
     def parse_args(self, args):
         parser = argparse.ArgumentParser(prog='update', usage='%(prog)s [options]')
+        parser.add_argument('--template', default=None, help='name of car template to use')
         parsed_args = parser.parse_args(args)
         return parsed_args
         
     def run(self, args):
+        args = self.parse_args(args)
         cc = CreateCar()
-        cc.create_car(path=".", overwrite=True)
+        cc.create_car(path=".", overwrite=True, template=args.template)
         
 
 class FindCar(BaseCommand):
@@ -176,33 +186,47 @@ class CalibrateCar(BaseCommand):
         parser.add_argument('--address', default='0x40', help="The i2c address you'd like to calibrate [default 0x40]")
         parser.add_argument('--bus', default=None, help="The i2c bus you'd like to calibrate [default autodetect]")
         parser.add_argument('--pwmFreq', default=60, help="The frequency to use for the PWM")
+        parser.add_argument('--arduino', dest='arduino', action='store_true', help='Use arduino pin for PWM (calibrate pin=<channel>)')
+        parser.set_defaults(arduino=False)
         parsed_args = parser.parse_args(args)
         return parsed_args
 
     def run(self, args):
-        from donkeycar.parts.actuator import PCA9685
-        from donkeycar.parts.sombrero import Sombrero
-
-        s = Sombrero()
-
         args = self.parse_args(args)
         channel = int(args.channel)
-        busnum = None
-        if args.bus:
-            busnum = int(args.bus)
-        address = int(args.address, 16)
-        print('init PCA9685 on channel %d address %s bus %s' %(channel, str(hex(address)), str(busnum)))
-        freq = int(args.pwmFreq)
-        print("Using PWM freq: {}".format(freq))
-        c = PCA9685(channel, address=address, busnum=busnum, frequency=freq)
-        print()
+
+        if args.arduino == True:
+            from donkeycar.parts.actuator import ArduinoFirmata
+
+            arduino_controller = ArduinoFirmata(servo_pin=channel)
+            print('init Arduino PWM on pin %d' %(channel))
+            input_prompt = "Enter a PWM setting to test ('q' for quit) (0-180): "
+        else:
+            from donkeycar.parts.actuator import PCA9685
+            from donkeycar.parts.sombrero import Sombrero
+
+            s = Sombrero()
+
+            busnum = None
+            if args.bus:
+                busnum = int(args.bus)
+            address = int(args.address, 16)
+            print('init PCA9685 on channel %d address %s bus %s' %(channel, str(hex(address)), str(busnum)))
+            freq = int(args.pwmFreq)
+            print("Using PWM freq: {}".format(freq))
+            c = PCA9685(channel, address=address, busnum=busnum, frequency=freq)
+            input_prompt = "Enter a PWM setting to test ('q' for quit) (0-1500): "
+            print()
         while True:
             try:
-                val = input("""Enter a PWM setting to test ('q' for quit) (0-1500): """)
+                val = input(input_prompt)
                 if val == 'q' or val == 'Q':
                     break
                 pmw = int(val)
-                c.run(pmw)
+                if args.arduino == True:
+                    arduino_controller.set_pulse(channel,pmw)
+                else:
+                    c.run(pmw)
             except KeyboardInterrupt:
                 print("\nKeyboardInterrupt received, exit.")
                 break
@@ -224,7 +248,7 @@ class MakeMovieShell(BaseCommand):
         parser.add_argument('--out', default='tub_movie.mp4', help='The movie filename to create. default: tub_movie.mp4')
         parser.add_argument('--config', default='./config.py', help='location of config file to use. default: ./config.py')
         parser.add_argument('--model', default=None, help='the model to use to show control outputs')
-        parser.add_argument('--type', default=None, help='the model type to load')
+        parser.add_argument('--type', default=None, required=False, help='the model type to load')
         parser.add_argument('--salient', action="store_true", help='should we overlay salient map showing activations')
         parser.add_argument('--start', type=int, default=0, help='first frame to process')
         parser.add_argument('--end', type=int, default=-1, help='last frame to process')
@@ -259,7 +283,8 @@ class TubCheck(BaseCommand):
         Check for any problems. Looks at tubs and find problems in any records or images that won't open.
         If fix is True, then delete images and records that cause problems.
         '''
-        tubs = [Tub(path) for path in tub_paths]
+        cfg = load_config('config.py')
+        tubs = gather_tubs(cfg, tub_paths)
 
         for tub in tubs:
             tub.check(fix=fix)
@@ -279,34 +304,43 @@ class ShowHistogram(BaseCommand):
         parser = argparse.ArgumentParser(prog='tubhist', usage='%(prog)s [options]')
         parser.add_argument('--tub', nargs='+', help='paths to tubs')
         parser.add_argument('--record', default=None, help='name of record to create histogram')
+        parser.add_argument('--out', default=None, help='path where to save histogram end with .png')
         parsed_args = parser.parse_args(args)
         return parsed_args
 
-    def show_histogram(self, tub_paths, record_name):
+    def show_histogram(self, tub_paths, record_name, out):
         '''
         Produce a histogram of record type frequency in the given tub
         '''
         from matplotlib import pyplot as plt
         from donkeycar.parts.datastore import TubGroup
 
+        output = out or os.path.basename(tub_paths)
         tg = TubGroup(tub_paths=tub_paths)
+
         if record_name is not None:
             tg.df[record_name].hist(bins=50)
         else:
             tg.df.hist(bins=50)
-
+  
         try:
-            filename = os.path.basename(tub_paths) + '_hist_%s.png' % record_name.replace('/', '_')
+            if out is not None:
+                filename = output
+            else:
+                if record_name is not None:
+                    filename = output + '_hist_%s.png' % record_name.replace('/', '_')
+                else:
+                    filename = output + '_hist.png'
             plt.savefig(filename)
             print('saving image to:', filename)
-        except:
-            pass
+        except Exception as e:
+            print(e)
         plt.show()
 
     def run(self, args):
         args = self.parse_args(args)
         args.tub = ','.join(args.tub)
-        self.show_histogram(args.tub, args.record)
+        self.show_histogram(args.tub, args.record, args.out)
 
 
 class ConSync(BaseCommand):
@@ -350,6 +384,7 @@ class ConSync(BaseCommand):
             os.system(command)
             time.sleep(5)
 
+
 class ConTrain(BaseCommand):
     '''
     continuously train data
@@ -392,7 +427,7 @@ class ShowCnnActivations(BaseCommand):
         model_path = os.path.expanduser(model_path)
         image_path = os.path.expanduser(image_path)
 
-        model = load_model(model_path)
+        model = load_model(model_path, compile=False)
         image = load_scaled_image_arr(image_path, cfg)[None, ...]
 
         conv_layer_names = self.get_conv_layers(model)
@@ -510,9 +545,9 @@ class ShowPredictionPlots(BaseCommand):
 
     def parse_args(self, args):
         parser = argparse.ArgumentParser(prog='tubplot', usage='%(prog)s [options]')
-        parser.add_argument('--tub', nargs='+', help='paths to tubs')
+        parser.add_argument('--tub', nargs='+', help='The tub to make plot from')
         parser.add_argument('--model', default=None, help='name of record to create histogram')
-        parser.add_argument('--limit', default=1000, help='how many records to process')
+        parser.add_argument('--limit', type=int, default=1000, help='how many records to process')
         parser.add_argument('--type', default=None, help='model type')
         parser.add_argument('--config', default='./config.py', help='location of config file to use. default: ./config.py')
         parsed_args = parser.parse_args(args)
@@ -524,6 +559,51 @@ class ShowPredictionPlots(BaseCommand):
         cfg = load_config(args.config)
         self.plot_predictions(cfg, args.tub, args.model, args.limit, args.type)
         
+
+class TubAugment(BaseCommand):
+    def parse_args(self, args):
+        parser = argparse.ArgumentParser(prog='tubaugment',
+                                         usage='%(prog)s [options]')
+        parser.add_argument('tubs', nargs='+', help='paths to tubs')
+        parser.add_argument('--inplace', dest='inplace', action='store_true',
+                            help='If tub should be changed in place or new '
+                                 'tub will be created')
+        parser.set_defaults(inplace=False)
+        parsed_args = parser.parse_args(args)
+        return parsed_args
+
+    def augment(self, tub_paths, inplace=False):
+        """
+        :param tub_paths:   path list to tubs
+        :param inplace:     if tub should be changed or copied
+        :return:            None
+        """
+        cfg = load_config('config.py')
+        tubs = gather_tubs(cfg, tub_paths)
+
+        for tub in tubs:
+            if inplace:
+                tub.augment_images()
+            else:
+                tub_path = tub.path
+                # remove trailing slash if exits
+                if tub_path[-1] == '/':
+                    tub_path = tub_path[:-1]
+                # create new tub path by inserting '_aug' after 'tub_XY'
+                head, tail = os.path.split(tub_path)
+                tail_list = tail.split('_')
+                tail_list.insert(2, 'aug')
+                new_tail = '_'.join(tail_list)
+                new_path = os.path.join(head, new_tail)
+                # copy whole tub to new location and run augmentation
+                shutil.copytree(tub.path, new_path)
+                new_tub = Tub(new_path)
+                new_tub.augment_images()
+
+    def run(self, args):
+        args = self.parse_args(args)
+        self.augment(args.tubs, args.inplace)
+
 
 def execute_from_command_line():
     """
@@ -537,12 +617,13 @@ def execute_from_command_line():
             'tubhist': ShowHistogram,
             'tubplot': ShowPredictionPlots,
             'tubcheck': TubCheck,
+            'tubaugment': TubAugment,
             'makemovie': MakeMovieShell,            
             'createjs': CreateJoystick,
             'consync': ConSync,
             'contrain': ConTrain,
             'cnnactivations': ShowCnnActivations,
-            'update': UpdateCar,
+            'update': UpdateCar
                 }
     
     args = sys.argv[:]
@@ -558,4 +639,3 @@ def execute_from_command_line():
     
 if __name__ == "__main__":
     execute_from_command_line()
-    
