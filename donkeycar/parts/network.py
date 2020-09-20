@@ -357,7 +357,7 @@ class MQTTValueSub(object):
 
         p = zlib.decompress(self.data)
         obj = pickle.loads(p)
-
+        
         if self.name == obj['name']:
             self.last = obj['val']
             #print("steering, throttle", obj['val'])

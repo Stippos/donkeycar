@@ -31,6 +31,7 @@ class DonkeyGymEnv(object):
         
     def update(self):
         while self.running:
+            #print (self.action)
             self.frame, _, _, self.info = self.env.step(self.action)
             if self.action == [0, 0]:
                 self.env.reset()
@@ -38,6 +39,8 @@ class DonkeyGymEnv(object):
                 #self.env.reset()
 
     def run_threaded(self, steering, throttle):
+        #print(steering)
+        #print(throttle)
         if steering is None or throttle is None:
             steering = 0.0
             throttle = 0.0
