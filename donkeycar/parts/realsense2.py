@@ -66,6 +66,9 @@ class RS_T265(object):
             self.pos = data.translation
             self.vel = data.velocity
             self.acc = data.acceleration
+
+            self.speed = np.sqrt(self.vel.x**2 + self.vel.y**2 + self.vel.z**2)
+
             logging.debug('realsense pos(%f, %f, %f)' % (self.pos.x, self.pos.y, self.pos.z))
 
     def update(self):
@@ -75,12 +78,13 @@ class RS_T265(object):
     def run_threaded(self, target_speed):
 
         if target_speed == 0 and not self.restarted:
-            print("Restarting RealSense")
-            self.pipe.stop()
-            time.sleep(1)
-            self.pipe.start(self.cfg)
-            self.restarted = True
-            print("RealSense restarted")
+            if self.speed < 0.05:
+                print("Restarting RealSense")
+                self.pipe.stop()
+                time.sleep(1)
+                self.pipe.start(self.cfg)
+                self.restarted = True
+                print("RealSense restarted")
 
         if target_speed != 0 and self.restarted:
             self.restarted = False
