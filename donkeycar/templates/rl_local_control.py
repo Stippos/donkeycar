@@ -32,11 +32,12 @@ else:
 
 V.add(cam, inputs=inputs, outputs=["camera/arr"], threaded=True)
 
-img_to_jpg = ImgArrToJpg()
-V.add(img_to_jpg, inputs=["camera/arr"], outputs=["camera/jpg"])
 
 pub_cam = MQTTValuePub("donkey/%s/camera" % cfg.DONKEY_UNIQUE_NAME, broker=cfg.MQTT_BROKER)
 V.add(pub_cam, inputs=["camera/jpg"])
+
+agent = RL_agent()
+V.add(RL_agent, inputs=["camera/jpg", "params"], outputs=["target_speed", ""])
 
 #REALSENSE
 
