@@ -11,6 +11,7 @@ from donkeycar.parts.camera import PiCamera
 from donkeycar.parts.actuator import PCA9685, PWMSteering, PWMThrottle
 from donkeycar.parts.network import MQTTValueSub, MQTTValuePub
 from donkeycar.parts.image import ImgArrToJpg
+from donkeycar.parts.rl_agent import RL_Agent
 
 cfg = dk.load_config()
 
@@ -18,26 +19,27 @@ V = dk.Vehicle()
 
 print("starting up", cfg.DONKEY_UNIQUE_NAME, "for remote management.")
 
+class Constant:
+    def run(self, image):
+        print(image)
+        return 1, 1
 
 #CAMERA
 
 if cfg.DONKEY_GYM:
     from donkeycar.parts.dgym import DonkeyGymEnv 
-    cam = DonkeyGymEnv(cfg.DONKEY_SIM_PATH, env_name=cfg.DONKEY_GYM_ENV_NAME)
-    threaded = True
-    inputs = ["steering", 'throttle']
+    cam = DonkeyGymEnv(cfg.DONKEY_SIM_PATH, host=cfg.SIM_HOST, env_name=cfg.DONKEY_GYM_ENV_NAME, conf=cfg.GYM_CONF, delay=cfg.SIM_ARTIFICIAL_LATENCY)
+    inputs = ["steering", 'target_speed']
 else:
     inputs = []
     cam = PiCamera(image_w=cfg.IMAGE_W, image_h=cfg.IMAGE_H, image_d=cfg.IMAGE_DEPTH)
 
-V.add(cam, inputs=inputs, outputs=["camera/arr"], threaded=True)
+V.add(cam, inputs=inputs, outputs=["image"], threaded=True)
 
+#V.add(Constant(), inputs=["image"], outputs=["steering", "target_speed"])
 
-pub_cam = MQTTValuePub("donkey/%s/camera" % cfg.DONKEY_UNIQUE_NAME, broker=cfg.MQTT_BROKER)
-V.add(pub_cam, inputs=["camera/jpg"])
-
-agent = RL_agent()
-V.add(RL_agent, inputs=["camera/jpg", "params"], outputs=["target_speed", ""])
+agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM)
+V.add(agent, inputs=["image", "speed"], outputs=["steering", "target_speed", "training"], threaded=False)
 
 #REALSENSE
 
@@ -46,22 +48,11 @@ if cfg.REALSENSE:
     from donkeycar.parts.realsense2 import RS_T265
     from donkeycar.parts.pid import PID
 
-    sub_controls = MQTTValueSub("donkey/%s/controls" % cfg.DONKEY_UNIQUE_NAME, def_value=(0., 0.), broker=cfg.MQTT_BROKER)
-    V.add(sub_controls, outputs=["steering", "target_speed"])
-
     rs = RS_T265()
-    V.add(rs, outputs=["pos", "vel", "acc", "img"], inputs= ["target_speed"], threaded=True)
+    V.add(rs, outputs=["pos", "vel", "acc", "img", "speed"], inputs= ["training"], threaded=True)
 
     pid = PID()
-    V.add(pid, inputs=["vel", "pos", "acc", "target_speed"], outputs=["throttle", "state"])
-
-    pub_state = MQTTValuePub("donkey/%s/state" % cfg.DONKEY_UNIQUE_NAME, broker=cfg.MQTT_BROKER)
-    V.add(pub_state, inputs=["state"])
-
-else:
-
-    sub_controls = MQTTValueSub("donkey/%s/controls" % cfg.DONKEY_UNIQUE_NAME, def_value=(0., 0.), broker=cfg.MQTT_BROKER)
-    V.add(sub_controls, outputs=["steering", "throttle"])
+    V.add(pid, inputs=["target_speed", "car_status"], outputs=["throttle", "state"])
 
 
 #STEERING 

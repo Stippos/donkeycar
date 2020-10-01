@@ -21,7 +21,7 @@ class PID(object):
         zero = (0, 0, 0)
         self.state = {"a": zero, "v": zero, "x": zero}
 
-    def run(self, vel, pos, acc, target_speed):
+    def run(self, vel, pos, acc, target_speed, car_running=True):
         
         try:    
             current_speed = (vel.x**2 + vel.y**2 + vel.z**2)**0.5
@@ -36,7 +36,7 @@ class PID(object):
             #Measurement from realsense is yet to arrive
             current_speed = 0
 
-        if target_speed == 0:
+        if target_speed == 0 or not car_running:
 
             self.throttle = 0.15
             return 0, self.state
