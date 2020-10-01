@@ -140,7 +140,7 @@ class RL_Agent():
             """Save observation to replay buffer"""
             reward = 1 + (self.speed - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN)
             done = self.dead
-            reward = reward * -1 if self.dead else reward
+            reward = reward * -10 if self.dead else reward
 
             next_command_history = np.roll(self.command_history, 3)
             next_command_history[:3] = [self.steering, self.target_speed, self.speed]
@@ -266,7 +266,7 @@ if __name__ == "__main__":
         
         if len(agent.agent.replay_buffer.buffer) > 0:
             print("Training")
-            agent.agent.update_parameters(5)
+            agent.agent.update_parameters(GRADIENT_STEPS)
             params = agent.agent.export_parameters()
             agent.param_pub.run(params)
         
