@@ -161,6 +161,9 @@ class RL_Agent():
             self.episode_reward += reward
             step_end = time.time()
 
+            self.state = next_state
+            self.control_history = next_command_history
+
             print(f"Episode: {self.episode}, Step: {self.step}, Reward: {reward:.2f}, Episode reward: {self.episode_reward:.2f}, Step time: {(self.step_start - step_end):.2f}")
 
 
