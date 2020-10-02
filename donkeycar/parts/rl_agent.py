@@ -256,7 +256,7 @@ class RL_Agent():
 
         steering = max(steering_min, min(steering_max, action[0]))
 
-        return [steering, action[1] * var + mu]
+        return [action[0], action[1] * var + mu]
 
 if __name__ == "__main__":
     print("Starting as training server")
