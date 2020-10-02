@@ -5,6 +5,7 @@ from donkeycar.parts.network import MQTTValuePub, MQTTValueSub
 import time
 
 sys.path.insert(1, "/home/ari/Documents/RLDonkeyCar")
+sys.path.insert(1, "/u/70/viitala1/unix/Documents/Dippa/RLDonkeyCar")
 
 from models.ae_sac import AE_SAC
 from gym import spaces
@@ -18,7 +19,7 @@ THROTTLE_MIN = 0.25
 MAX_STEERING_DIFF = 0.2
 STEP_LENGTH = 0.1
 RANDOM_EPISODES = 1
-GRADIENT_STEPS = 100
+GRADIENT_STEPS = 5
 
 MAX_EPISODE_STEPS = 500
 
@@ -87,7 +88,7 @@ class RL_Agent():
 
         self.replay_buffer_pub = MQTTValuePub(DONKEY_NAME + "buffer", broker="mqtt.eclipse.org")
         self.replay_buffer_sub = MQTTValueSub(DONKEY_NAME + "buffer", broker="mqtt.eclipse.org")
-        
+
         self.param_pub = MQTTValuePub(DONKEY_NAME + "param", broker="mqtt.eclipse.org")
         self.param_sub = MQTTValueSub(DONKEY_NAME + "param", broker="mqtt.eclipse.org")
         
@@ -104,25 +105,28 @@ class RL_Agent():
 
         self.command_history = np.zeros(3*COMMAND_HISTORY_LENGTH)
         self.state = np.vstack([image for x in range(FRAME_STACK)])
+        self.buffer_sent = False
+        self.buffer_received = False
+        self.params_sent = False
+        self.params_received = False
 
 
     def train(self):
         print(f"Training for {int(time.time() - self.training_start)} seconds")    
-        self.replay_buffer_pub.run(self.replay_buffer)
+        if not self.buffer_sent:
+            self.replay_buffer_pub.run(self.replay_buffer)
+            self.buffer_sent = True
 
         new_params = self.param_sub.run()
         
         if not new_params:
             return True
 
-        if self.params and new_params:            
-            if np.array_equal(self.params["policy"], new_params["policy"]):
-                return True
-
         print("Received new params.")
-
+        self.replay_buffer_pub.run(False)
         self.agent.import_parameters(new_params)
-        self.params = new_params
+        
+        self.buffer_sent = False
 
         return False
 
@@ -254,23 +258,30 @@ class RL_Agent():
 if __name__ == "__main__":
     print("Starting as training server")
     agent = RL_Agent("sac", False)
-    replay_buffer = []
+    params_sent = False
+    buffer_received = False
+    trained = False
 
     while True:
         new_buffer = agent.replay_buffer_sub.run()
-        if new_buffer:
-            if len(replay_buffer) == 0 or not new_buffer[5][1] == replay_buffer[5][1]:
-                print(f"{len(new_buffer)} new buffer observations")
-                agent.agent.append_buffer(new_buffer)
-                replay_buffer = new_buffer
-        
-        if len(agent.agent.replay_buffer.buffer) > 0:
+
+        if new_buffer and not trained:
+            print(f"{len(new_buffer)} new buffer observations")
+            agent.agent.append_buffer(new_buffer)
             print("Training")
             agent.agent.update_parameters(GRADIENT_STEPS)
             params = agent.agent.export_parameters()
+            trained = True
+        
+        if trained:
             agent.param_pub.run(params)
         
+        if not new_buffer:
+            agent.param_pub.run(False)
+            trained = False
+        
         print("Waiting for observations.")
+        time.sleep(1)
 
 
 
