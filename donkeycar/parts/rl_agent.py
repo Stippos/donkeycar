@@ -6,6 +6,8 @@ import time
 
 sys.path.insert(1, "/home/ari/Documents/RLDonkeyCar")
 sys.path.insert(1, "/u/70/viitala1/unix/Documents/Dippa/RLDonkeyCar")
+sys.path.insert(1, "/home/pi/Documents/RLDonkeyCar")
+
 
 from models.ae_sac import AE_SAC
 from gym import spaces
