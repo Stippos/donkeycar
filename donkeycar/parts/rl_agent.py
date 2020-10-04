@@ -16,8 +16,8 @@ DONKEY_NAME = "Kari_real"
 
 STEER_LIMIT_LEFT = -1
 STEER_LIMIT_RIGHT = 1
-THROTTLE_MAX = 0.5
-THROTTLE_MIN = 0.1
+THROTTLE_MAX = 0.6
+THROTTLE_MIN = 0.25
 MAX_STEERING_DIFF = 0.25
 STEP_LENGTH = 0.1
 RANDOM_EPISODES = 1
@@ -137,7 +137,7 @@ class RL_Agent():
     def run(self, image, speed=None):
 
         if not speed:
-            self.speed = 0
+            self.speed = self.target_speed
         else:
             self.speed = speed
 
@@ -148,7 +148,7 @@ class RL_Agent():
 
         if self.step > 0 and not self.training:
             """Save observation to replay buffer"""
-            reward = 1 + (self.target_speed - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN)
+            reward = 1 + (self.speed - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN)
             done = self.dead
             reward = reward * -10 if self.dead else reward
 
