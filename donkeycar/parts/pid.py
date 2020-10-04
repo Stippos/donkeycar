@@ -29,8 +29,8 @@ class PID(object):
         if training:
 
             self.throttle = 0.15
-            return 0, self.state
-        
+            return 0
+            
         error = target_speed - speed
 
         self.history = np.roll(self.history, 1)
