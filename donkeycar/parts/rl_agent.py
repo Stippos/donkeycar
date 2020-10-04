@@ -235,7 +235,7 @@ class RL_Agent():
 
         pixels = (r & g & b).sum()
 
-        print("Pixels: {}, Required: {}".format(pixels, pixels_required))
+        #print("Pixels: {}, Required: {}".format(pixels, pixels_required))
         
         return  pixels < pixels_required
 

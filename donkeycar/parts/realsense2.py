@@ -48,6 +48,9 @@ class RS_T265(object):
         try:
             if not self.restarted:
                 frames = self.pipe.wait_for_frames()
+            else:
+                return
+                
         except Exception as e:
             logging.error(e)
             return
