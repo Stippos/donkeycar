@@ -295,7 +295,7 @@ if __name__ == "__main__":
         if trained:
             print("Sending parameters")
             agent.param_pub.run(params)
-            time.sleep(2)
+            time.sleep(1)
         
         if not new_buffer:
             agent.param_pub.run(False)
