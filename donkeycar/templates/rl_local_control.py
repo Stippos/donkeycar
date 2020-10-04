@@ -12,6 +12,7 @@ from donkeycar.parts.actuator import PCA9685, PWMSteering, PWMThrottle
 from donkeycar.parts.network import MQTTValueSub, MQTTValuePub
 from donkeycar.parts.image import ImgArrToJpg
 from donkeycar.parts.rl_agent import RL_Agent
+from donkeycar.parts.episode_logger import EpisodeLogger
 
 cfg = dk.load_config()
 
@@ -54,6 +55,8 @@ if cfg.REALSENSE:
     pid = PID()
     V.add(pid, inputs=["target_speed", "speed", "training"], outputs=["throttle"])
 
+    logger = EpisodeLogger()
+    V.add(logger, inputs=["training", "steering", "throttle", "pos", "vel"])
 
 #STEERING 
 

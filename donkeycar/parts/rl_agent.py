@@ -178,6 +178,7 @@ class RL_Agent():
         if self.step > MAX_EPISODE_STEPS or (self.dead and not self.training):
             self.training_start = time.time()
         
+            self.step = 0
             self.steering = 0
             self.target_speed = 0
             self.training = True
@@ -188,7 +189,6 @@ class RL_Agent():
         if self.training:
         
             self.training = self.train()
-            self.step = 0
             self.dead = False
 
             
