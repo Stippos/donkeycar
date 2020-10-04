@@ -14,9 +14,9 @@ DONKEY_NAME = "Kari_real"
 
 STEER_LIMIT_LEFT = -1
 STEER_LIMIT_RIGHT = 1
-THROTTLE_MAX = 0.6
-THROTTLE_MIN = 0.25
-MAX_STEERING_DIFF = 0.2
+THROTTLE_MAX = 0.5
+THROTTLE_MIN = 0.1
+MAX_STEERING_DIFF = 0.25
 STEP_LENGTH = 0.1
 RANDOM_EPISODES = 1
 GRADIENT_STEPS = 600
@@ -113,6 +113,7 @@ class RL_Agent():
 
     def train(self):
         print(f"Training for {int(time.time() - self.training_start)} seconds")    
+
         if not self.buffer_sent:
             self.replay_buffer_pub.run(self.replay_buffer)
             self.buffer_sent = True
@@ -142,7 +143,7 @@ class RL_Agent():
 
         if self.step > 0 and not self.training:
             """Save observation to replay buffer"""
-            reward = 1 + (self.speed - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN)
+            reward = 1 + (self.target_speed - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN)
             done = self.dead
             reward = reward * -10 if self.dead else reward
 
@@ -162,7 +163,7 @@ class RL_Agent():
             step_end = time.time()
 
             self.state = next_state
-            self.control_history = next_command_history
+            self.command_history = next_command_history
 
             print(f"Episode: {self.episode}, Step: {self.step}, Reward: {reward:.2f}, Episode reward: {self.episode_reward:.2f}, Step time: {(self.step_start - step_end):.2f}")
 
@@ -256,7 +257,7 @@ class RL_Agent():
 
         steering = max(steering_min, min(steering_max, action[0]))
 
-        return [action[0], action[1] * var + mu]
+        return [steering, action[1] * var + mu]
 
 if __name__ == "__main__":
     print("Starting as training server")
@@ -277,13 +278,14 @@ if __name__ == "__main__":
             trained = True
         
         if trained:
+            print("Sending parameters")
             agent.param_pub.run(params)
         
         if not new_buffer:
             agent.param_pub.run(False)
             trained = False
-        
-        print("Waiting for observations.")
+            print("Waiting for observations.")
+
         time.sleep(1)
 
 
