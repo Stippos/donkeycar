@@ -77,16 +77,15 @@ class RS_T265(object):
 
     def run_threaded(self, training):
 
-        if training and not self.restarted:
-            if self.speed < 0.05:
-                print("Restarting RealSense")
-                self.pipe.stop()
-                time.sleep(1)
-                self.pipe.start(self.cfg)
-                self.restarted = True
-                print("RealSense restarted")
+        if training and not self.restarted and self.speed < 0.05:
 
+            print("Restarting RealSense")
+            self.pipe.stop()
+            self.restarted = True
+                
         if not training and self.restarted:
+            print("RealSense restarted")
+            self.pipe.start(self.cfg)
             self.restarted = False
         
         return self.pos, self.vel, self.acc, self.img, self.speed

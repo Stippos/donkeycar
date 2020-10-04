@@ -21,27 +21,17 @@ class PID(object):
         zero = (0, 0, 0)
         self.state = {"a": zero, "v": zero, "x": zero}
 
-    def run(self, vel, pos, acc, target_speed, car_running=True):
+    def run(self, target_speed, speed, training):
         
-        try:    
-            current_speed = (vel.x**2 + vel.y**2 + vel.z**2)**0.5
-            
-            self.state = {
-                "a": (acc.x, acc.y, acc.z),
-                "v": (vel.x, vel.y, vel.z),
-                "x": (pos.x, pos.y, pos.z)
-            }
+        if not speed:
+            speed = target_speed
 
-        except AttributeError:
-            #Measurement from realsense is yet to arrive
-            current_speed = 0
-
-        if target_speed == 0 or not car_running:
+        if training:
 
             self.throttle = 0.15
             return 0, self.state
         
-        error = target_speed - current_speed
+        error = target_speed - speed
 
         self.history = np.roll(self.history, 1)
         self.history[0] = error
@@ -51,8 +41,8 @@ class PID(object):
 
         adjustment = self.p * error + self.i * i_error + self.d * d_error
 
-        print("Speed: {:.2f}, Throttle: {:.2f}, Error: {:2f}".format(current_speed, self.throttle, error))
+        print("Speed: {:.2f}, Throttle: {:.2f}, Error: {:2f}".format(speed, self.throttle, error))
         
         self.throttle += adjustment
         
-        return self.throttle, self.state
+        return self.throttle
