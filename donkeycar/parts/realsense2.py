@@ -46,7 +46,8 @@ class RS_T265(object):
 
     def poll(self):
         try:
-            frames = self.pipe.wait_for_frames()
+            if not self.restarted:
+                frames = self.pipe.wait_for_frames()
         except Exception as e:
             logging.error(e)
             return
