@@ -295,13 +295,14 @@ if __name__ == "__main__":
         if trained:
             print("Sending parameters")
             agent.param_pub.run(params)
+            time.sleep(2)
         
         if not new_buffer:
             agent.param_pub.run(False)
             trained = False
             print("Waiting for observations.")
 
-        time.sleep(0.3)
+        time.sleep(0.1)
 
 
 
