@@ -10,7 +10,7 @@ sys.path.insert(1, "/home/pi/Documents/RLDonkeyCar")
 
 
 from models.ae_sac import AE_SAC
-from gym import spaces
+#from gym import spaces
 
 DONKEY_NAME = "Kari_real"
 
@@ -33,9 +33,9 @@ LR = 0.0003
 IMAGE_SIZE = 40
 RGB = False
 
-action_space = spaces.Box(
-    low=np.array([STEER_LIMIT_LEFT, THROTTLE_MIN]), 
-    high=np.array([STEER_LIMIT_RIGHT, THROTTLE_MAX]), dtype=np.float32)
+# action_space = spaces.Box(
+#     low=np.array([STEER_LIMIT_LEFT, THROTTLE_MIN]), 
+#     high=np.array([STEER_LIMIT_RIGHT, THROTTLE_MAX]), dtype=np.float32)
 
 
 PARAMS = {
