@@ -30,7 +30,7 @@ class PID(object):
 
             self.throttle = 0.15
             return 0
-            
+
         error = target_speed - speed
 
         self.history = np.roll(self.history, 1)
@@ -41,7 +41,7 @@ class PID(object):
 
         adjustment = self.p * error + self.i * i_error + self.d * d_error
 
-        print("Speed: {:.2f}, Throttle: {:.2f}, Error: {:2f}".format(speed, self.throttle, error))
+        #print("Speed: {:.2f}, Throttle: {:.2f}, Error: {:2f}".format(speed, self.throttle, error))
         
         self.throttle += adjustment
         
