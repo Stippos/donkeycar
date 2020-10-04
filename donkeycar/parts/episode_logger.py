@@ -33,7 +33,7 @@ class EpisodeLogger:
                 
 
             with open(self.file, "a+") as f:
-                f.write("{};{};{};{};{};{};{};{};{};{};{}").format(
+                f.write("{};{};{};{};{};{};{};{};{};{};{}".format(
                     self.episode,
                     self.step,
                     datetime.datetime.today().isoformat(),
@@ -41,7 +41,7 @@ class EpisodeLogger:
                     throttle,
                     *speed,
                     *location
-                )
+                ))
         
         else:
             self.step = 0
