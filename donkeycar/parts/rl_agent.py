@@ -117,10 +117,14 @@ class RL_Agent():
     def train(self):
         #print(f"Training for {int(time.time() - self.training_start)} seconds")    
 
-        if not self.buffer_sent or (time.time() - self.training_start) > 60:
+        if not self.buffer_sent:
             print("Buffer sent")
             self.replay_buffer_pub.run(self.replay_buffer[SKIP_INITIAL_STEPS:])
             self.buffer_sent = True
+
+        if (time.time() - self.training_start) > 60:
+            self.training_start = time.time()
+            self.buffer_sent = False
 
         new_params = self.param_sub.run()
         

@@ -33,7 +33,7 @@ class EpisodeLogger:
                 
 
             with open(self.file, "a+") as f:
-                f.write("{};{};{};{};{};{};{};{};{};{};{}".format(
+                f.write("{};{};{};{};{};{};{};{};{};{};{}\n".format(
                     self.episode,
                     self.step,
                     datetime.datetime.today().isoformat(),
