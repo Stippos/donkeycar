@@ -301,7 +301,7 @@ if __name__ == "__main__":
             trained = False
             print("Waiting for observations.")
 
-        time.sleep(1)
+        time.sleep(0.3)
 
 
 
