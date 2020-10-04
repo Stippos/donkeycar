@@ -33,6 +33,7 @@ LR = 0.0001
 IMAGE_SIZE = 40
 RGB = False
 
+SKIP_INITIAL_STEPS = 20
 # action_space = spaces.Box(
 #     low=np.array([STEER_LIMIT_LEFT, THROTTLE_MIN]), 
 #     high=np.array([STEER_LIMIT_RIGHT, THROTTLE_MAX]), dtype=np.float32)
@@ -114,10 +115,11 @@ class RL_Agent():
 
 
     def train(self):
-        print(f"Training for {int(time.time() - self.training_start)} seconds")    
+        #print(f"Training for {int(time.time() - self.training_start)} seconds")    
 
         if not self.buffer_sent:
-            self.replay_buffer_pub.run(self.replay_buffer)
+            print("Buffer sent")
+            self.replay_buffer_pub.run(self.replay_buffer[SKIP_INITIAL_STEPS:])
             self.buffer_sent = True
 
         new_params = self.param_sub.run()
@@ -201,6 +203,9 @@ class RL_Agent():
 
         self.step += 1
         
+        if self.step < SKIP_INITIAL_STEPS:
+            return 0, 0, False
+
         self.step_start = time.time()
 
         #if self.episode < RANDOM_EPISODES:
