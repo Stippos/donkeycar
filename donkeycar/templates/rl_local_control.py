@@ -52,7 +52,7 @@ if cfg.REALSENSE:
     V.add(rs, outputs=["pos", "vel", "acc", "img", "speed"], inputs= ["training"], threaded=True)
 
     pid = PID()
-    V.add(pid, inputs=["target_speed", "car_status"], outputs=["throttle", "state"])
+    V.add(pid, inputs=["target_speed", "speed", "training"], outputs=["throttle"])
 
 
 #STEERING 
