@@ -141,7 +141,7 @@ class RL_Agent():
         else:
             self.speed = speed
 
-        if image:
+        if image is not None:
             self.image = image
 
         self.dead = self.is_dead(self.image) if not self.sim else self.is_dead_sim(self.image)
