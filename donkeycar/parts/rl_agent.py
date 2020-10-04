@@ -28,7 +28,7 @@ MAX_EPISODE_STEPS = 500
 COMMAND_HISTORY_LENGTH = 5
 FRAME_STACK = 1
 VAE_OUTPUT = 20
-LR = 0.0003
+LR = 0.0001
 
 IMAGE_SIZE = 40
 RGB = False
@@ -141,7 +141,10 @@ class RL_Agent():
         else:
             self.speed = speed
 
-        self.dead = self.is_dead(image) if not self.sim else self.is_dead_sim(image)
+        if image:
+            self.image = image
+
+        self.dead = self.is_dead(self.image) if not self.sim else self.is_dead_sim(self.image)
 
         if self.step > 0 and not self.training:
             """Save observation to replay buffer"""
@@ -153,7 +156,7 @@ class RL_Agent():
             next_command_history[:3] = [self.steering, self.target_speed, self.speed]
 
             next_state = np.roll(self.state, 1)
-            next_state[:1, :, :] = self.agent.process_im(image, IMAGE_SIZE, RGB)
+            next_state[:1, :, :] = self.agent.process_im(self.image, IMAGE_SIZE, RGB)
 
             self.replay_buffer.append([ [self.state, self.command_history], 
                                         [self.steering, self.target_speed],
@@ -194,16 +197,17 @@ class RL_Agent():
             if not self.sim:
                 input("Press Enter to start a new episode.")
             
-            self.reset(self.agent.process_im(image, IMAGE_SIZE, RGB))
+            self.reset(self.agent.process_im(self.image, IMAGE_SIZE, RGB))
 
         self.step += 1
         
         self.step_start = time.time()
 
-        if self.episode < RANDOM_EPISODES:
-            action = action_space.sample()
-        else:
-            action = self.agent.select_action((self.state, self.command_history))
+        #if self.episode < RANDOM_EPISODES:
+        #    action = action_space.sample()
+        #else:
+            
+        action = self.agent.select_action((self.state, self.command_history))
 
         self.steering, self.target_speed = self.enforce_limits(action, self.command_history[0]) 
 
