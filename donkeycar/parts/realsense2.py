@@ -42,7 +42,7 @@ class RS_T265(object):
         self.acc = zero_vec
         self.img = None
 
-        self.restarted = True
+        self.restarted = False
 
     def poll(self):
         try:
