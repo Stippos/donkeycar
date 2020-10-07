@@ -1,18 +1,24 @@
 import sys
-import numpy as np
-from donkeycar.parts.network import MQTTValuePub, MQTTValueSub
-
 import time
+import argparse
+
+import numpy as np
+
+from donkeycar.parts.network import MQTTValuePub, MQTTValueSub
 
 sys.path.insert(1, "/home/ari/Documents/RLDonkeyCar")
 sys.path.insert(1, "/u/70/viitala1/unix/Documents/Dippa/RLDonkeyCar")
 sys.path.insert(1, "/home/pi/Documents/RLDonkeyCar")
 
-
 from models.ae_sac import AE_SAC
-#from gym import spaces
 
-DONKEY_NAME = "Kari_real"
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--car_name", help="Name of the car on MQTT-server", default="Kari")
+
+args = parser.parse_args()
+
+DONKEY_NAME = args.car_name
 
 STEER_LIMIT_LEFT = -1
 STEER_LIMIT_RIGHT = 1
@@ -123,8 +129,11 @@ class RL_Agent():
             self.buffer_sent = True
 
         if (time.time() - self.training_start) > 60:
+            """Temporary fix for when sometimes the replay buffer fails to send"""
             self.training_start = time.time()
             self.buffer_sent = False
+            self.replay_buffer_pub.run(False)
+            return False
 
         new_params = self.param_sub.run()
         

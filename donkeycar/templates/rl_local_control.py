@@ -31,6 +31,10 @@ if cfg.DONKEY_GYM:
     from donkeycar.parts.dgym import DonkeyGymEnv 
     cam = DonkeyGymEnv(cfg.DONKEY_SIM_PATH, host=cfg.SIM_HOST, env_name=cfg.DONKEY_GYM_ENV_NAME, conf=cfg.GYM_CONF, delay=cfg.SIM_ARTIFICIAL_LATENCY)
     inputs = ["steering", 'target_speed']
+
+    logger = EpisodeLogger()
+    V.add(logger, inputs=["training", "steering", "target_speed", "pos", "vel"])
+
 else:
     inputs = []
     cam = PiCamera(image_w=cfg.IMAGE_W, image_h=cfg.IMAGE_H, image_d=cfg.IMAGE_DEPTH)
@@ -41,6 +45,8 @@ V.add(cam, inputs=inputs, outputs=["image"], threaded=True)
 
 agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM)
 V.add(agent, inputs=["image", "speed"], outputs=["steering", "target_speed", "training"], threaded=False)
+
+
 
 #REALSENSE
 
@@ -55,8 +61,6 @@ if cfg.REALSENSE:
     pid = PID()
     V.add(pid, inputs=["target_speed", "speed", "training"], outputs=["throttle"])
 
-    logger = EpisodeLogger()
-    V.add(logger, inputs=["training", "steering", "throttle", "pos", "vel"])
 
 #STEERING 
 

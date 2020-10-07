@@ -15,7 +15,7 @@ class EpisodeLogger:
         self.episode = 0
         self.step = 0
 
-    def run(self, training, steering, throttle, pos, vel):    
+    def run(self, training, steering, throttle, pos=None, vel=None):    
         
         if not training:
             
