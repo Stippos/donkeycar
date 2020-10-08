@@ -43,7 +43,7 @@ V.add(cam, inputs=inputs, outputs=["image"], threaded=True)
 
 #V.add(Constant(), inputs=["image"], outputs=["steering", "target_speed"])
 
-agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM)
+agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM, car_name=cfg.DONKEY_UNIQUE_NAME)
 V.add(agent, inputs=["image", "speed"], outputs=["steering", "target_speed", "training"], threaded=False)
 
 

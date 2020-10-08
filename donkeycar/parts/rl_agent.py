@@ -72,7 +72,7 @@ PARAMS = {
 }
 
 class RL_Agent():
-    def __init__(self, alg_type, sim):
+    def __init__(self, alg_type, sim, car_name="Kari"):
         self.agent = AE_SAC(PARAMS)
         self.sim = sim
 
@@ -93,11 +93,11 @@ class RL_Agent():
         self.training = False
         self.step_start = 0
 
-        self.replay_buffer_pub = MQTTValuePub(DONKEY_NAME + "buffer", broker="mqtt.eclipse.org")
-        self.replay_buffer_sub = MQTTValueSub(DONKEY_NAME + "buffer", broker="mqtt.eclipse.org")
+        self.replay_buffer_pub = MQTTValuePub(car_name + "buffer", broker="mqtt.eclipse.org")
+        self.replay_buffer_sub = MQTTValueSub(car_name + "buffer", broker="mqtt.eclipse.org")
 
-        self.param_pub = MQTTValuePub(DONKEY_NAME + "param", broker="mqtt.eclipse.org")
-        self.param_sub = MQTTValueSub(DONKEY_NAME + "param", broker="mqtt.eclipse.org")
+        self.param_pub = MQTTValuePub(car_name + "param", broker="mqtt.eclipse.org")
+        self.param_sub = MQTTValueSub(car_name + "param", broker="mqtt.eclipse.org")
         
         self.params = self.param_sub.run()
 
@@ -283,7 +283,7 @@ class RL_Agent():
 
 if __name__ == "__main__":
     print("Starting as training server")
-    agent = RL_Agent("sac", False)
+    agent = RL_Agent("sac", False, DONKEY_NAME)
     params_sent = False
     buffer_received = False
     trained = False
