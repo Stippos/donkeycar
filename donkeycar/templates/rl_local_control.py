@@ -61,6 +61,8 @@ if cfg.REALSENSE:
     pid = PID()
     V.add(pid, inputs=["target_speed", "speed", "training"], outputs=["throttle"])
 
+    logger = EpisodeLogger()
+    V.add(logger, inputs=["training", "steering", "throttle", "pos", "vel"])
 
 #STEERING 
 
