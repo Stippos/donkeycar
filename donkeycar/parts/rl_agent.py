@@ -15,6 +15,9 @@ from models.ae_sac import AE_SAC
 parser = argparse.ArgumentParser()
 
 parser.add_argument("--car_name", help="Name of the car on MQTT-server", default="Kari")
+parser.add_argument("--episode_steps", help="Number of steps per episode", default=1000)
+parser.add_argument("--episodes", help="Number of steps episodes per run", default=100)
+
 
 args = parser.parse_args()
 
@@ -29,7 +32,8 @@ STEP_LENGTH = 0.1
 RANDOM_EPISODES = 1
 GRADIENT_STEPS = 600
 
-MAX_EPISODE_STEPS = 1000
+SKIP_INITIAL_STEPS = 20
+MAX_EPISODE_STEPS = args.episode_steps + SKIP_INITIAL_STEPS
 
 COMMAND_HISTORY_LENGTH = 5
 FRAME_STACK = 1
@@ -38,12 +42,6 @@ LR = 0.0001
 
 IMAGE_SIZE = 40
 RGB = False
-
-SKIP_INITIAL_STEPS = 20
-# action_space = spaces.Box(
-#     low=np.array([STEER_LIMIT_LEFT, THROTTLE_MIN]), 
-#     high=np.array([STEER_LIMIT_RIGHT, THROTTLE_MAX]), dtype=np.float32)
-
 
 PARAMS = {
 
@@ -289,8 +287,9 @@ if __name__ == "__main__":
     params_sent = False
     buffer_received = False
     trained = False
+    training_episodes = 0
 
-    while True:
+    while training_episodes < args.episodes:
         new_buffer = agent.replay_buffer_sub.run()
 
         if new_buffer and not trained:
