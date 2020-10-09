@@ -71,7 +71,7 @@ PARAMS = {
 }
 
 class RL_Agent():
-    def __init__(self, alg_type, sim, car_name="Kari"):
+    def __init__(self, alg_type, sim, car_name=args.car_name):
         self.agent = AE_SAC(PARAMS)
         self.sim = sim
 
@@ -298,8 +298,6 @@ if __name__ == "__main__":
             agent.agent.update_parameters(GRADIENT_STEPS)
             params = agent.agent.export_parameters()
             trained = True
-        
-        if trained:
             print("Sending parameters")
             agent.param_pub.run(params)
             time.sleep(1)
