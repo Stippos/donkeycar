@@ -24,7 +24,7 @@ DONKEY_NAME = args.car_name
 
 STEER_LIMIT_LEFT = -1
 STEER_LIMIT_RIGHT = 1
-THROTTLE_MAX = 0.6
+THROTTLE_MAX = 1
 THROTTLE_MIN = 0.25
 MAX_STEERING_DIFF = 0.25
 STEP_LENGTH = 0.1
@@ -97,7 +97,7 @@ class RL_Agent():
 
         self.param_pub = MQTTValuePub(car_name + "param", broker="mqtt.eclipse.org")
         self.param_sub = MQTTValueSub(car_name + "param", broker="mqtt.eclipse.org")
-        
+
         self.params = self.param_sub.run()
 
     def reset(self, image):
