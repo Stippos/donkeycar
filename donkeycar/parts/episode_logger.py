@@ -10,12 +10,12 @@ class EpisodeLogger:
         self.file = f"./records/record_{datetime.datetime.today().isoformat()}.csv"
         
         with open(self.file, "w+") as f:
-            f.write("Episode;Step;Time;Steering;Throttle;SpeedX;SpeedY;SpeedZ;PosX;PosY;PosZ\n")
+            f.write("Episode;Step;Time;Steering;Throttle;TargetSpeed;SpeedX;SpeedY;SpeedZ;PosX;PosY;PosZ\n")
 
         self.episode = 0
         self.step = 0
 
-    def run(self, training, steering, throttle, pos=None, vel=None):    
+    def run(self, training, steering, throttle, target_speed, pos=None, vel=None):    
         
         if not training:
             
@@ -33,12 +33,13 @@ class EpisodeLogger:
                 
 
             with open(self.file, "a+") as f:
-                f.write("{};{};{};{};{};{};{};{};{};{};{}\n".format(
+                f.write("{};{};{};{};{};{};{};{};{};{};{};{}\n".format(
                     self.episode,
                     self.step,
                     datetime.datetime.today().isoformat(),
                     steering,
                     throttle,
+                    target_speed,
                     *speed,
                     *location
                 ))
