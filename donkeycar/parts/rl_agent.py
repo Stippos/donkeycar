@@ -298,7 +298,7 @@ if __name__ == "__main__":
     while training_episodes < args.episodes:
         new_buffer = agent.replay_buffer_sub.run()
 
-        if new_buffer and not trained:
+        if new_buffer != True and not trained:
             print(f"{len(new_buffer)} new buffer observations")
             agent.agent.append_buffer(new_buffer)
             agent.replay_buffer_pub.run(True)
