@@ -176,6 +176,8 @@ class RL_Agent():
         if self.step > 0 and not self.training:
             """Save observation to replay buffer"""
             reward = 1 + (self.speed - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN)
+            reward = min(reward, 2) / 2
+
             done = self.dead
             reward = reward * -10 if self.dead else reward
 
