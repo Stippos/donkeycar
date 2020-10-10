@@ -29,10 +29,10 @@ THROTTLE_MIN = 0.25
 MAX_STEERING_DIFF = 0.25
 STEP_LENGTH = 0.1
 RANDOM_EPISODES = 1
-GRADIENT_STEPS = 600
+GRADIENT_STEPS = 5
 
 SKIP_INITIAL_STEPS = 20
-BLOCK_SIZE = 200
+BLOCK_SIZE = 400
 MAX_EPISODE_STEPS = args.episode_steps + SKIP_INITIAL_STEPS
 
 COMMAND_HISTORY_LENGTH = 5
@@ -93,14 +93,17 @@ class RL_Agent():
         self.training = False
         self.step_start = 0
 
+        self.buffers_sent = False
+
         self.replay_buffer_pub = MQTTValuePub(car_name + "buffer", broker="mqtt.eclipse.org")
-        self.replay_buffer_sub = MQTTValueSub(car_name + "buffer", broker="mqtt.eclipse.org")
+        self.replay_buffer_sub = MQTTValueSub(car_name + "buffer", broker="mqtt.eclipse.org", def_value=(0, True))
+
+        self.replay_buffer_received_pub = MQTTValuePub(car_name + "buffer_received", broker="mqtt.eclipse.org")
+        self.replay_buffer_received_sub = MQTTValueSub(car_name + "buffer_received", broker="mqtt.eclipse.org", def_value=0)
 
         self.param_pub = MQTTValuePub(car_name + "param", broker="mqtt.eclipse.org")
         self.param_sub = MQTTValueSub(car_name + "param", broker="mqtt.eclipse.org")
 
-        self.replay_buffer_pub.run(True)
-        self.param_pub.run(False)
 
     def reset(self, image):
         self.episode += 1
@@ -123,16 +126,21 @@ class RL_Agent():
     def train(self):
         #print(f"Training for {int(time.time() - self.training_start)} seconds")    
 
-        if self.replay_buffer_sub.run() == True:
-            if len(self.replay_buffer) > 0:
-                self.replay_buffer_pub.run(self.replay_buffer[:BLOCK_SIZE])
+        if len(self.replay_buffer) > 0:
+            buffers_received = self.replay_buffer_received_sub.run()
+
+            if self.buffers_sent == buffers_received:
+                self.buffers_sent += 1
+                self.replay_buffer_pub.run((self.buffers_sent, self.replay_buffer[:BLOCK_SIZE]))
                 print(f"Sent {len(self.replay_buffer[:BLOCK_SIZE])} observations")
                 self.replay_buffer = self.replay_buffer[BLOCK_SIZE:]
-            else:
-                self.replay_buffer_pub.run(False)
                 
             return True
 
+        if self.replay_buffer_received_sub.run() == self.buffers_sent:
+            self.buffers_sent = 0
+            self.replay_buffer_received_pub.run(0)
+            self.replay_buffer_pub.run((0, False))
 
         if (time.time() - self.training_start) > 60:
             """Temporary fix for when sometimes the replay buffer fails to send"""
@@ -294,17 +302,20 @@ if __name__ == "__main__":
     buffer_received = False
     trained = False
     training_episodes = 0
+    buffers_received = 0
+    prev_buffer = 0
 
     while training_episodes < args.episodes:
         new_buffer = agent.replay_buffer_sub.run()
-
-        if new_buffer and new_buffer != True and not trained:
+        
+        if (new_buffer[0] - 1)  == prev_buffer and not trained:
             print("New buffer")
-            print(f"{len(new_buffer)} new buffer observations")
-            agent.agent.append_buffer(new_buffer)
-            agent.replay_buffer_pub.run(True)
+            print(f"{len(new_buffer[1])} new buffer observations")
+            agent.agent.append_buffer(new_buffer[1])
+            prev_buffer += 1
+            agent.replay_buffer_received_pub.run(prev_buffer)
 
-        if new_buffer == False and not trained:
+        if new_buffer[1] == False and prev_buffer > 0 and not trained:
             print("Training")
             agent.agent.update_parameters(GRADIENT_STEPS)
             params = agent.agent.export_parameters()
@@ -313,8 +324,9 @@ if __name__ == "__main__":
             agent.param_pub.run(params)
             time.sleep(1)
         
-        if agent.param_sub.run() == False:
+        if trained and agent.param_sub.run() == False:
             trained = False
+            prev_buffer = 0
             print("Waiting for observations.")
 
         time.sleep(0.1)
