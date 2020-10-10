@@ -26,7 +26,7 @@ class PID(object):
         if not speed:
             speed = target_speed
 
-        if training:
+        if training or target_speed == 0:
 
             self.throttle = 0.15
             return 0

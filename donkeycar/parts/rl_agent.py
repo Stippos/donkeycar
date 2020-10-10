@@ -32,6 +32,7 @@ RANDOM_EPISODES = 1
 GRADIENT_STEPS = 600
 
 SKIP_INITIAL_STEPS = 20
+BLOCK_SIZE = 200
 MAX_EPISODE_STEPS = args.episode_steps + SKIP_INITIAL_STEPS
 
 COMMAND_HISTORY_LENGTH = 5
@@ -120,10 +121,16 @@ class RL_Agent():
     def train(self):
         #print(f"Training for {int(time.time() - self.training_start)} seconds")    
 
-        if not self.buffer_sent:
-            print("Buffer sent")
-            self.replay_buffer_pub.run(self.replay_buffer[SKIP_INITIAL_STEPS:])
-            self.buffer_sent = True
+        if len(self.replay_buffer) > 0:
+            if self.replay_buffer_sub.run() == True:
+                self.replay_buffer_pub.run(self.replay_buffer[:BLOCK_SIZE])
+                print(f"Sent {len(self.replay_buffer[:BLOCK_SIZE])} observations")
+                self.replay_buffer = self.replay_buffer[BLOCK_SIZE:]
+                
+            return True
+
+        self.replay_buffer_pub.run(False)
+
 
         if (time.time() - self.training_start) > 60:
             """Temporary fix for when sometimes the replay buffer fails to send"""
@@ -138,10 +145,8 @@ class RL_Agent():
             return True
 
         print("Received new params.")
-        self.replay_buffer_pub.run(False)
         self.agent.import_parameters(new_params)
-        
-        self.buffer_sent = False
+        self.param_pub.run(False)
 
         return False
 
@@ -192,7 +197,7 @@ class RL_Agent():
             self.steering = 0
             self.target_speed = 0
             self.training = True
-
+            self.replay_buffer = self.replay_buffer[SKIP_INITIAL_STEPS:]
             return self.steering, self.target_speed, self.training
 
 
@@ -294,6 +299,9 @@ if __name__ == "__main__":
         if new_buffer and not trained:
             print(f"{len(new_buffer)} new buffer observations")
             agent.agent.append_buffer(new_buffer)
+            agent.replay_buffer_pub.run(True)
+
+        if new_buffer == False and not trained:
             print("Training")
             agent.agent.update_parameters(GRADIENT_STEPS)
             params = agent.agent.export_parameters()
@@ -302,8 +310,7 @@ if __name__ == "__main__":
             agent.param_pub.run(params)
             time.sleep(1)
         
-        if not new_buffer:
-            agent.param_pub.run(False)
+        if agent.param_sub.run() == False:
             trained = False
             print("Waiting for observations.")
 
