@@ -123,15 +123,15 @@ class RL_Agent():
     def train(self):
         #print(f"Training for {int(time.time() - self.training_start)} seconds")    
 
-        if len(self.replay_buffer) > 0:
-            if self.replay_buffer_sub.run() == True:
+        if self.replay_buffer_sub.run() == True:
+            if len(self.replay_buffer) > 0:
                 self.replay_buffer_pub.run(self.replay_buffer[:BLOCK_SIZE])
                 print(f"Sent {len(self.replay_buffer[:BLOCK_SIZE])} observations")
                 self.replay_buffer = self.replay_buffer[BLOCK_SIZE:]
+            else:
+                self.replay_buffer_pub.run(False)
                 
             return True
-
-        self.replay_buffer_pub.run(False)
 
 
         if (time.time() - self.training_start) > 60:
@@ -298,7 +298,8 @@ if __name__ == "__main__":
     while training_episodes < args.episodes:
         new_buffer = agent.replay_buffer_sub.run()
 
-        if new_buffer is not None and new_buffer != True and not trained:
+        if new_buffer and new_buffer != True and not trained:
+            print("New buffer")
             print(f"{len(new_buffer)} new buffer observations")
             agent.agent.append_buffer(new_buffer)
             agent.replay_buffer_pub.run(True)
