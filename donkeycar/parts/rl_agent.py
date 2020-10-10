@@ -292,6 +292,8 @@ if __name__ == "__main__":
     buffer_received = False
     trained = False
     training_episodes = 0
+    agent.replay_buffer_pub.run(True)
+    agent.param_pub.run(False)
 
     while training_episodes < args.episodes:
         new_buffer = agent.replay_buffer_sub.run()

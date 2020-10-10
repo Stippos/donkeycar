@@ -339,7 +339,7 @@ class MQTTValueSub(object):
 
         self.name = name
         self.data = None
-        self.client = Client(clean_session=True)
+        self.client = Client(clean_session=False)
         self.client.on_message = self.on_message
         print("(clean_session) connecting to broker", broker)
         self.client.connect(broker)
