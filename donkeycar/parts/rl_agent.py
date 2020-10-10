@@ -99,7 +99,8 @@ class RL_Agent():
         self.param_pub = MQTTValuePub(car_name + "param", broker="mqtt.eclipse.org")
         self.param_sub = MQTTValueSub(car_name + "param", broker="mqtt.eclipse.org")
 
-        self.params = self.param_sub.run()
+        self.replay_buffer_pub.run(True)
+        self.param_pub.run(False)
 
     def reset(self, image):
         self.episode += 1
@@ -117,8 +118,6 @@ class RL_Agent():
         self.params_sent = False
         self.params_received = False
 
-        agent.replay_buffer_pub.run(True)
-        agent.param_pub.run(False)
 
 
     def train(self):
