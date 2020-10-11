@@ -5,7 +5,7 @@ import numpy as np
 
 class PID(object):
 
-    def __init__(self, p=0.005, i=0.00, d=5):
+    def __init__(self, p=0.005, i=0.00, d=10):
         self.p = p
         self.d = d
         self.i = i
@@ -41,7 +41,7 @@ class PID(object):
 
         adjustment = self.p * error + self.i * i_error + self.d * d_error
 
-        #print("Speed: {:.2f}, Throttle: {:.2f}, Error: {:2f}".format(speed, self.throttle, error))
+        print("Speed: {:.2f}, Throttle: {:.2f}, Error: {:2f}".format(speed, self.throttle, error))
         
         self.throttle += adjustment
         
