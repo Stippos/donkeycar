@@ -199,7 +199,7 @@ class RL_Agent():
             self.state = next_state
             self.command_history = next_command_history
 
-            print(f"Episode: {self.episode}, Step: {self.step}, Reward: {reward:.2f}, Episode reward: {self.episode_reward:.2f}, Step time: {(self.step_start - step_end):.2f}, Speed: {self.speed:.2f}")
+            print(f"Episode: {self.episode}, Step: {self.step}, Reward: {reward:.2f}, Episode reward: {self.episode_reward:.2f}, Step time: {(self.step_start - step_end):.2f}, Speed: {self.speed:.2f}, Throttle: {self.target_speed}")
 
 
         if self.step > MAX_EPISODE_STEPS or (self.dead and not self.training):
