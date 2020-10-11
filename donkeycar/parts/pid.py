@@ -5,7 +5,7 @@ import numpy as np
 
 class PID(object):
 
-    def __init__(self, p=0.005, i=0.00, d=10):
+    def __init__(self, p=0.0025, i=0.00, d=1):
         self.p = p
         self.d = d
         self.i = i
