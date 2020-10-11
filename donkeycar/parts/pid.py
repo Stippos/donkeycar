@@ -5,7 +5,7 @@ import numpy as np
 
 class PID(object):
 
-    def __init__(self, p=0.005, i=0.00, d=-5):
+    def __init__(self, p=0.005, i=0.00, d=5):
         self.p = p
         self.d = d
         self.i = i
@@ -37,7 +37,7 @@ class PID(object):
         self.history[0] = error
 
         i_error = np.mean(self.history)
-        d_error = np.mean(np.diff(self.history[:self.derivation_time]))
+        d_error = self.history[0] - self.history[1]
 
         adjustment = self.p * error + self.i * i_error + self.d * d_error
 
