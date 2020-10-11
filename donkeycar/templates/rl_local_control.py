@@ -33,7 +33,7 @@ if cfg.DONKEY_GYM:
     inputs = ["steering", 'target_speed']
 
     logger = EpisodeLogger()
-    V.add(logger, inputs=["training", "steering", "target_speed", "pos", "vel"])
+    V.add(logger, inputs=["training", "steering", "target_speed", "target_speed", "pos", "vel"])
 
 else:
     inputs = []
@@ -62,7 +62,7 @@ if cfg.REALSENSE:
     V.add(pid, inputs=["target_speed", "speed", "training"], outputs=["throttle"])
 
     logger = EpisodeLogger()
-    V.add(logger, inputs=["training", "steering", "throttle", "pos", "vel"])
+    V.add(logger, inputs=["training", "steering", "throttle", "target_speed", "pos", "vel"])
 
 #STEERING 
 
