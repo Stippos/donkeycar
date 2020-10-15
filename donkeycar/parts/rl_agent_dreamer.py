@@ -44,7 +44,7 @@ def define_config():
   args.actor_lr = 8e-5
   args.value_lr = 8e-5
   args.free_nats = 3
-  args.experience_size = 1000000
+  args.experience_size = 100000
   args.bit_depth = 5
   args.discount = 0.99
   args.temp = 0.2 # entropy temperature
