@@ -11,7 +11,6 @@ from donkeycar.parts.camera import PiCamera
 from donkeycar.parts.actuator import PCA9685, PWMSteering, PWMThrottle
 from donkeycar.parts.network import MQTTValueSub, MQTTValuePub
 from donkeycar.parts.image import ImgArrToJpg
-from donkeycar.parts.rl_agent import RL_Agent
 from donkeycar.parts.episode_logger import EpisodeLogger
 
 cfg = dk.load_config()
@@ -43,7 +42,14 @@ V.add(cam, inputs=inputs, outputs=["image"], threaded=True)
 
 #V.add(Constant(), inputs=["image"], outputs=["steering", "target_speed"])
 
-agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM, car_name=cfg.DONKEY_UNIQUE_NAME)
+if cfg.RL_ALG_TYPE == "dreamer":
+    from donkeycar.parts.rl_agent_dreamer import RL_Agent
+    agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM, car_name=cfg.DONKEY_UNIQUE_NAME)
+else:
+    from donkeycar.parts.rl_agent_sac import RL_Agent
+    agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM, car_name=cfg.DONKEY_UNIQUE_NAME)
+
+
 V.add(agent, inputs=["image", "speed"], outputs=["steering", "target_speed", "training"], threaded=False)
 
 
