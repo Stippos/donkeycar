@@ -17,6 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--car_name", help="Name of the car on MQTT-server", default="Kari")
 parser.add_argument("--episode_steps", help="Number of steps per episode", default=1000, type=int)
 parser.add_argument("--episodes", help="Number of steps episodes per run", default=100, type=int)
+parser.add_argument("--encoder_update", help="Type of encoder to be used", default="aesac")
 
 args = parser.parse_args()
 
@@ -41,7 +42,8 @@ VAE_OUTPUT = 20
 LR = 0.0001
 
 IMAGE_SIZE = 40
-RGB = False
+RGB = True
+IMAGE_CHANNELS = 3 if RGB else 1
 
 PARAMS = {
 
@@ -51,12 +53,13 @@ PARAMS = {
         "target_entropy": -2,
         "batch_size": 128,
         "hidden_size": 64,
-        "encoder_update_frequency": 0,
-        "critic_loss_encoder_update": True,
+        "encoder_update_frequency": 1,
+        "encoder_critic_loss": True,
+        "encoder_ae_loss": True,
         "pretrained_ae": "",
         "im_size": IMAGE_SIZE,
         "n_images": 20000,
-        "epochs": 1000
+        "epochs": 1000,
         },
     "ae": {
         "framestack": FRAME_STACK,
@@ -72,7 +75,20 @@ PARAMS = {
 }
 
 class RL_Agent():
-    def __init__(self, alg_type, sim, car_name=args.car_name):
+    def __init__(self, alg_type, sim, car_name=args.car_name, encoder_update="aesac"):
+
+        if encoder_update == "pixel":
+            PARAMS["encoder_critic_loss"] = True
+            PARAMS["encoder_ae_loss"] = False
+
+        if encoder_update == "ae":
+            PARAMS["encoder_critic_loss"] = False
+            PARAMS["encoder_ae_loss"] = True
+
+        if encoder_update == "aesac":
+            PARAMS["encoder_critic_loss"] = True
+            PARAMS["encoder_ae_loss"] = True
+
         self.agent = AE_SAC(PARAMS)
         self.sim = sim
 
@@ -184,8 +200,8 @@ class RL_Agent():
             next_command_history = np.roll(self.command_history, 3)
             next_command_history[:3] = [self.steering, self.target_speed, self.speed]
 
-            next_state = np.roll(self.state, 1)
-            next_state[:1, :, :] = self.agent.process_im(self.image, IMAGE_SIZE, RGB)
+            next_state = np.roll(self.state, IMAGE_CHANNELS)
+            next_state[:IMAGE_CHANNELS, :, :] = self.agent.process_im(self.image, IMAGE_SIZE, RGB)
 
             self.replay_buffer.append([ [self.state, self.command_history], 
                                         [self.steering, self.target_speed],
