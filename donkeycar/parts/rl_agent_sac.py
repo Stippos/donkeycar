@@ -18,6 +18,7 @@ parser.add_argument("--car_name", help="Name of the car on MQTT-server", default
 parser.add_argument("--episode_steps", help="Number of steps per episode", default=1000, type=int)
 parser.add_argument("--episodes", help="Number of steps episodes per run", default=100, type=int)
 parser.add_argument("--encoder_update", help="Type of encoder to be used", default="aesac")
+parser.add_argument("--total_steps", help="Max steps for a run", default=50000)
 
 args = parser.parse_args()
 
@@ -105,6 +106,7 @@ class RL_Agent():
         self.episode = 0
         self.episode_reward = 0
         self.replay_buffer = []
+        self.max_episode_steps = max_episode_steps
 
         self.target_speed = 0
         self.steering = 0
@@ -224,7 +226,7 @@ class RL_Agent():
             print(f"Episode: {self.episode}, Step: {self.step}, Reward: {reward:.2f}, Episode reward: {self.episode_reward:.2f}, Step time: {(self.step_start - step_end):.2f}, Speed: {self.speed:.2f}, Throttle: {self.target_speed:.2f}")
 
 
-        if self.step > MAX_EPISODE_STEPS or (self.dead and not self.training):
+        if self.step > self.max_episode_steps or (self.dead and not self.training):
             self.training_start = time.time()
         
             self.step = 0
@@ -335,6 +337,8 @@ if __name__ == "__main__":
         if (new_buffer[0] - 1)  == prev_buffer and not trained:
             print("New buffer")
             print(f"{len(new_buffer[1])} new buffer observations")
+            if len(agent.agent.replay_buffer.buffer) > args.total_steps:
+                break
             agent.agent.append_buffer(new_buffer[1])
             prev_buffer += 1
             agent.replay_buffer_received_pub.run(prev_buffer)
