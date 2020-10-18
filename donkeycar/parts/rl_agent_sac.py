@@ -25,8 +25,8 @@ DONKEY_NAME = args.car_name
 
 STEER_LIMIT_LEFT = -1
 STEER_LIMIT_RIGHT = 1
-THROTTLE_MAX = 0.31
-THROTTLE_MIN = 0.29
+THROTTLE_MAX = 0.4
+THROTTLE_MIN = 0.4
 MAX_STEERING_DIFF = 2
 STEP_LENGTH = 0.1
 RANDOM_EPISODES = 1
@@ -78,14 +78,17 @@ class RL_Agent():
     def __init__(self, alg_type, sim, car_name=args.car_name, encoder_update=args.encoder_update, max_episode_steps=MAX_EPISODE_STEPS):
 
         if encoder_update == "pixel":
+            print("Using Pixel encoder")
             PARAMS["encoder_critic_loss"] = True
             PARAMS["encoder_ae_loss"] = False
 
         if encoder_update == "ae":
+            print("Using Autoencoder loss")
             PARAMS["encoder_critic_loss"] = False
             PARAMS["encoder_ae_loss"] = True
 
         if encoder_update == "aesac":
+            print("Using autoencoder and critic loss")
             PARAMS["encoder_critic_loss"] = True
             PARAMS["encoder_ae_loss"] = True
 
@@ -191,8 +194,11 @@ class RL_Agent():
 
         if self.step > 0 and not self.training:
             """Save observation to replay buffer"""
-            reward = 1 + (self.speed - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN)
-            reward = min(reward, 2) / 2
+            if THROTTLE_MAX == THROTTLE_MIN:
+                reward = 1
+            else:
+                reward = 1 + (self.speed - THROTTLE_MIN) / (THROTTLE_MAX - THROTTLE_MIN)
+                reward = min(reward, 2) / 2
 
             done = self.dead
             reward = reward * -10 if self.dead else reward
