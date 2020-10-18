@@ -16,7 +16,7 @@ import torch
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("--car_name", help="Name of the car on MQTT-server", default="dreamer")
+parser.add_argument("--car_name", help="Name of the car on MQTT-server", default="ari_dreamer")
 parser.add_argument("--episode_steps", help="Number of steps per episode", default=1000, type=int)
 parser.add_argument("--episodes", help="Number of steps episodes per run", default=100, type=int)
 args = parser.parse_args()
