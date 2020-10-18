@@ -42,7 +42,7 @@ VAE_OUTPUT = 20
 LR = 0.0001
 
 IMAGE_SIZE = 40
-RGB = True
+RGB = False
 IMAGE_CHANNELS = 3 if RGB else 1
 
 PARAMS = {
