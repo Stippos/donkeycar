@@ -148,6 +148,14 @@ class RL_Agent():
         #print(f"Training for {int(time.time() - self.training_start)} seconds")    
 
         if len(self.replay_buffer) > 0:
+
+            if (time.time() - self.training_start) > 60:
+                """Temporary fix for when sometimes the replay buffer fails to send"""
+                self.training_start = time.time()
+                self.buffer_sent = False
+                self.replay_buffer_pub.run((0, False))
+                return False
+
             buffers_received = self.replay_buffer_received_sub.run()
 
             if self.buffers_sent == buffers_received:
@@ -163,12 +171,6 @@ class RL_Agent():
             self.replay_buffer_received_pub.run(0)
             self.replay_buffer_pub.run((0, False))
 
-        if (time.time() - self.training_start) > 60:
-            """Temporary fix for when sometimes the replay buffer fails to send"""
-            self.training_start = time.time()
-            self.buffer_sent = False
-            self.replay_buffer_pub.run(False)
-            return False
 
         new_params = self.param_sub.run()
         
@@ -337,8 +339,6 @@ if __name__ == "__main__":
         if (new_buffer[0] - 1)  == prev_buffer and not trained:
             print("New buffer")
             print(f"{len(new_buffer[1])} new buffer observations")
-            if len(agent.agent.replay_buffer.buffer) > args.total_steps:
-                break
             agent.agent.append_buffer(new_buffer[1])
             prev_buffer += 1
             agent.replay_buffer_received_pub.run(prev_buffer)
@@ -356,6 +356,8 @@ if __name__ == "__main__":
             trained = False
             prev_buffer = 0
             print("Waiting for observations.")
+            if len(agent.agent.replay_buffer.buffer) > args.total_steps:
+                break
 
         time.sleep(0.1)
 
