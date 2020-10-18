@@ -315,7 +315,7 @@ class RL_Agent():
 
 if __name__ == "__main__":
     print("Starting as training server")
-    agent = RL_Agent("sac", False, DONKEY_NAME)
+    agent = RL_Agent("sac", False, DONKEY_NAME, encoder_update=args.encoder_update)
     params_sent = False
     buffer_received = False
     trained = False
