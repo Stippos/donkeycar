@@ -79,18 +79,18 @@ class RL_Agent():
 
         if encoder_update == "pixel":
             print("Using Pixel encoder")
-            PARAMS["encoder_critic_loss"] = True
-            PARAMS["encoder_ae_loss"] = False
+            PARAMS["sac"]["encoder_critic_loss"] = True
+            PARAMS["sac"]["encoder_ae_loss"] = False
 
         if encoder_update == "ae":
             print("Using Autoencoder loss")
-            PARAMS["encoder_critic_loss"] = False
-            PARAMS["encoder_ae_loss"] = True
+            PARAMS["sac"]["encoder_critic_loss"] = False
+            PARAMS["sac"]["encoder_ae_loss"] = True
 
         if encoder_update == "aesac":
             print("Using autoencoder and critic loss")
-            PARAMS["encoder_critic_loss"] = True
-            PARAMS["encoder_ae_loss"] = True
+            PARAMS["sac"]["encoder_critic_loss"] = True
+            PARAMS["sac"]["encoder_ae_loss"] = True
 
         self.agent = AE_SAC(PARAMS)
         self.sim = sim
