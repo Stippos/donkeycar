@@ -47,7 +47,7 @@ if cfg.RL_ALG_TYPE == "dreamer":
     agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM, car_name=cfg.DONKEY_UNIQUE_NAME)
 else:
     from donkeycar.parts.rl_agent_sac import RL_Agent
-    agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM, car_name=cfg.DONKEY_UNIQUE_NAME, encoder_update=cfg.ENCODER_UPDATE)
+    agent = RL_Agent(alg_type=cfg.RL_ALG_TYPE, sim=cfg.DONKEY_GYM, car_name=cfg.DONKEY_UNIQUE_NAME, encoder_update=cfg.ENCODER_UPDATE, max_episode_steps=cfg.MAX_EPISODE_STEPS)
 
 
 V.add(agent, inputs=["image", "speed"], outputs=["steering", "target_speed", "training"], threaded=False)

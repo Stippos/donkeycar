@@ -30,6 +30,7 @@ REALSENSE = False
 #REINFORCEMENT ALGORTIHM
 RL_ALG_TYPE = "sac"
 ENCODER_UPDATE = "aesac"
+MAX_EPISODE_STEPS = 1000
 
 #VEHICLE
 DRIVE_LOOP_HZ = 20      # the vehicle loop will pause if faster than this speed.
