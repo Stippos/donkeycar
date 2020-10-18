@@ -75,7 +75,7 @@ PARAMS = {
 }
 
 class RL_Agent():
-    def __init__(self, alg_type, sim, car_name=args.car_name, encoder_update="aesac"):
+    def __init__(self, alg_type, sim, car_name=args.car_name, encoder_update="aesac", max_episode_steps=MAX_EPISODE_STEPS):
 
         if encoder_update == "pixel":
             PARAMS["encoder_critic_loss"] = True
