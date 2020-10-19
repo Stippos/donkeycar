@@ -19,7 +19,7 @@ parser.add_argument("--episode_steps", help="Number of steps per episode", defau
 parser.add_argument("--episodes", help="Number of steps episodes per run", default=100, type=int)
 parser.add_argument("--encoder_update", help="Type of encoder to be used", default="aesac")
 parser.add_argument("--total_steps", help="Max steps for a run", default=50000, type=int)
-
+parser.add_argument("--runs", help="How many runs to do", default=10, type=int)
 args = parser.parse_args()
 
 DONKEY_NAME = args.car_name
@@ -147,14 +147,14 @@ class RL_Agent():
     def train(self):
         #print(f"Training for {int(time.time() - self.training_start)} seconds")    
 
-        if len(self.replay_buffer) > 0:
+        if (time.time() - self.training_start) > 60:
+            """Temporary fix for when sometimes the replay buffer fails to send"""
+            self.training_start = time.time()
+            self.buffers_sent = 0
+            self.replay_buffer_pub.run((0, False))
+            return False
 
-            if (time.time() - self.training_start) > 60:
-                """Temporary fix for when sometimes the replay buffer fails to send"""
-                self.training_start = time.time()
-                self.buffer_sent = False
-                self.replay_buffer_pub.run((0, False))
-                return False
+        if len(self.replay_buffer) > 0:
 
             buffers_received = self.replay_buffer_received_sub.run()
 
@@ -332,6 +332,7 @@ if __name__ == "__main__":
     training_episodes = 0
     buffers_received = 0
     prev_buffer = 0
+    runs = 1
 
     while training_episodes < args.episodes:
         new_buffer = agent.replay_buffer_sub.run()
@@ -346,6 +347,12 @@ if __name__ == "__main__":
         if new_buffer[1] == False and prev_buffer > 0 and not trained:
             print("Training")
             agent.agent.update_parameters(GRADIENT_STEPS)
+            if len(agent.agent.replay_buffer.buffer) > args.total_steps:
+                agent = RL_Agent("sac", False, DONKEY_NAME, encoder_update=args.encoder_update)
+                runs += 1
+                if runs > args.runs:
+                    break
+
             params = agent.agent.export_parameters()
             trained = True
             print("Sending parameters")
@@ -356,8 +363,7 @@ if __name__ == "__main__":
             trained = False
             prev_buffer = 0
             print("Waiting for observations.")
-            if len(agent.agent.replay_buffer.buffer) > args.total_steps:
-                break
+            print(f"Run {runs}")
 
         time.sleep(0.1)
 
