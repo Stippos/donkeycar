@@ -36,6 +36,7 @@ GRADIENT_STEPS = 600
 SKIP_INITIAL_STEPS = 20
 BLOCK_SIZE = 200
 MAX_EPISODE_STEPS = args.episode_steps + SKIP_INITIAL_STEPS
+TRAINING_TIMEOUT = 100
 
 COMMAND_HISTORY_LENGTH = 5
 FRAME_STACK = 1
@@ -147,14 +148,14 @@ class RL_Agent():
     def train(self):
         #print(f"Training for {int(time.time() - self.training_start)} seconds")    
 
-        if (time.time() - self.training_start) > 60:
+        if (time.time() - self.training_start) > TRAINING_TIMEOUT:
             """Temporary fix for when sometimes the replay buffer fails to send"""
             self.training_start = time.time()
             self.buffers_sent = 0
             self.replay_buffer_pub.run((0, False))
             return False
 
-        if len(self.replay_buffer) > 0:
+        if len(self.replay_buffer) > TRAINING_TIMEOUT:
 
             buffers_received = self.replay_buffer_received_sub.run()
 
