@@ -155,7 +155,7 @@ class RL_Agent():
             self.replay_buffer_pub.run((0, False))
             return False
 
-        if len(self.replay_buffer) > TRAINING_TIMEOUT:
+        if len(self.replay_buffer) > 0:
 
             buffers_received = self.replay_buffer_received_sub.run()
 
