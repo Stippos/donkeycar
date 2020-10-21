@@ -340,7 +340,7 @@ if __name__ == "__main__":
     agent = RL_Agent("sac", False, DONKEY_NAME, encoder_update=args.encoder_update)
     
     if args.load_model:
-        agent = torch.load(args.load_model)
+        agent.agent = torch.load(args.load_model)
 
     params_sent = False
     buffer_received = False
@@ -373,7 +373,7 @@ if __name__ == "__main__":
             
             if args.save_model:
                 print("Saving model")
-                agent_2 = copy.deepcopy(agent)
+                agent_2 = copy.deepcopy(agent.agent)
                 agent_2.replay_buffer.buffer = []
                 torch.save(agent_2, MODEL_PATH)
 
