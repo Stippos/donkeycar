@@ -1,8 +1,11 @@
 import sys
 import time
 import argparse
+import copy
+import os
 
 import numpy as np
+import torch
 
 from donkeycar.parts.network import MQTTValuePub, MQTTValueSub
 
@@ -20,7 +23,15 @@ parser.add_argument("--episodes", help="Number of steps episodes per run", defau
 parser.add_argument("--encoder_update", help="Type of encoder to be used", default="aesac")
 parser.add_argument("--total_steps", help="Max steps for a run", default=50000, type=int)
 parser.add_argument("--runs", help="How many runs to do", default=10, type=int)
+parser.add_argument("--load_model", help="Load pretrained model", default="")
+parser.add_argument("--save_model", help="File name to save model", default="")
+
+
 args = parser.parse_args()
+
+if args.save_model and not os.path.isdir("./models"):
+    os.mkdir("./models")
+    MODEL_PATH = f"./models/{args.save_model}.pth"
 
 DONKEY_NAME = args.car_name
 
@@ -327,6 +338,10 @@ class RL_Agent():
 if __name__ == "__main__":
     print("Starting as training server")
     agent = RL_Agent("sac", False, DONKEY_NAME, encoder_update=args.encoder_update)
+    
+    if args.load_model:
+        agent = torch.load(args.load_model)
+
     params_sent = False
     buffer_received = False
     trained = False
@@ -346,13 +361,21 @@ if __name__ == "__main__":
             agent.replay_buffer_received_pub.run(prev_buffer)
 
         if new_buffer[1] == False and prev_buffer > 0 and not trained:
-            print("Training")
-            agent.agent.update_parameters(GRADIENT_STEPS)
-            if len(agent.agent.replay_buffer.buffer) > args.total_steps:
-                agent = RL_Agent("sac", False, DONKEY_NAME, encoder_update=args.encoder_update)
-                runs += 1
-                if runs > args.runs:
-                    break
+            
+            if not args.load_model:
+                print("Training")
+                agent.agent.update_parameters(GRADIENT_STEPS)
+                if len(agent.agent.replay_buffer.buffer) > args.total_steps:
+                    agent = RL_Agent("sac", False, DONKEY_NAME, encoder_update=args.encoder_update)
+                    runs += 1
+                    if runs > args.runs:
+                        break
+            
+            if args.save_model:
+                print("Saving model")
+                agent_2 = copy.deepcopy(agent)
+                agent_2.replay_buffer.buffer = []
+                torch.save(agent_2, MODEL_PATH)
 
             params = agent.agent.export_parameters()
             trained = True
