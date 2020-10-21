@@ -31,7 +31,8 @@ args = parser.parse_args()
 
 if args.save_model and not os.path.isdir("./models"):
     os.mkdir("./models")
-    MODEL_PATH = f"./models/{args.save_model}.pth"
+
+MODEL_PATH = f"./models/{args.save_model}.pth"
 
 DONKEY_NAME = args.car_name
 
