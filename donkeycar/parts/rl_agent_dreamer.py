@@ -37,6 +37,7 @@ if args.save_model and not os.path.isdir("./models"):
 
 MODEL_PATH = f"./models/{args.save_model}.pth"
 LOAD_MODEL = args.load_model
+SAVE_MODEL = args.save_name
 
 #DONKEY_NAME = args.car_name
 TRAINING_TIMEOUT = 300
@@ -426,7 +427,7 @@ if __name__ == "__main__":
                 print("Training")
                 agent.agent.update_parameters(args.gradient_steps)
 
-            if args.save_model:
+            if SAVE_MODEL:
                 print("Saving model")
                 agent_2 = copy.deepcopy(agent.agent)
                 agent_2.replay_buffer.buffer = []
