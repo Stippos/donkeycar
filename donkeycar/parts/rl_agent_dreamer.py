@@ -86,7 +86,7 @@ def define_config():
 	args.expl_amount = 0.3  # action noise
 
 	# for action constrains
-	args.throttle_base = 0.3  # fixed throttle base
+	args.throttle_base = 0.5  # fixed throttle base
 	args.throttle_min = 0.1
 	args.throttle_max = 0.5
 	args.angle_min = -1
