@@ -427,13 +427,12 @@ if __name__ == "__main__":
                 print("Training")
                 agent.agent.update_parameters(args.gradient_steps)
 
+            params = agent.agent.export_parameters()
+
             if SAVE_MODEL:
                 print("Saving model")
-                agent_2 = copy.deepcopy(agent.agent)
-                agent_2.replay_buffer.buffer = []
-                torch.save(agent_2, MODEL_PATH)
+                torch.save(params, MODEL_PATH)
 
-            params = agent.agent.export_parameters()
             trained = True
             print("Sending parameters")
             agent.param_pub.run(params)
