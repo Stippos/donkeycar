@@ -37,7 +37,7 @@ if args.save_model and not os.path.isdir("./models"):
 
 MODEL_PATH = f"./models/{args.save_model}.pth"
 LOAD_MODEL = args.load_model
-SAVE_MODEL = args.save_name
+SAVE_MODEL = args.save_model
 
 #DONKEY_NAME = args.car_name
 TRAINING_TIMEOUT = 300
