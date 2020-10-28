@@ -25,7 +25,7 @@ parser.add_argument("--total_steps", help="Max steps for a run", default=50000, 
 parser.add_argument("--runs", help="How many runs to do", default=10, type=int)
 parser.add_argument("--load_model", help="Load pretrained model", default="")
 parser.add_argument("--save_model", help="File name to save model", default="")
-
+parser.add_argument("--update_loaded_model", action="store_true", help="Update the model")
 
 args = parser.parse_args()
 
@@ -38,9 +38,10 @@ DONKEY_NAME = args.car_name
 
 STEER_LIMIT_LEFT = -1
 STEER_LIMIT_RIGHT = 1
-THROTTLE_MAX = 0.4
-THROTTLE_MIN = 0.4
+THROTTLE_MAX = 1.2
+THROTTLE_MIN = 0.2
 MAX_STEERING_DIFF = 2
+MAX_THROTTLE_DIFF = 0.3
 STEP_LENGTH = 0.1
 RANDOM_EPISODES = 1
 GRADIENT_STEPS = 600
@@ -280,7 +281,7 @@ class RL_Agent():
             
         action = self.agent.select_action((self.state, self.command_history))
 
-        self.steering, self.target_speed = self.enforce_limits(action, self.command_history[0]) 
+        self.steering, self.target_speed = self.enforce_limits(action, self.command_history[:2]) 
 
         return self.steering, self.target_speed, self.training
 
@@ -321,20 +322,25 @@ class RL_Agent():
 
         return rgb.sum() / (crop_height * 160) > required
 
-    def enforce_limits(self, action, prev_steering):
+    def enforce_limits(self, action, prev_action):
         """
         Scale the agent actions to environment limits
         """
 
+        prev_steering = prev_action[0]
+        prev_throttle = prev_action[1]
+
         var = (THROTTLE_MAX - THROTTLE_MIN) / 2
         mu = (THROTTLE_MAX + THROTTLE_MIN) / 2
 
-        steering_min = max(STEER_LIMIT_LEFT, prev_steering - MAX_STEERING_DIFF)
-        steering_max = min(STEER_LIMIT_RIGHT, prev_steering + MAX_STEERING_DIFF)
+        raw_throttle = action[1] * var + mu
 
-        steering = max(steering_min, min(steering_max, action[0]))
+        steering = np.clip(action[0], prev_steering - MAX_STEERING_DIFF, prev_steering + MAX_STEERING_DIFF)
+        steering = np.clip(steering, STEER_LIMIT_LEFT, STEER_LIMIT_RIGHT)
 
-        return [steering, action[1] * var + mu]
+        throttle = np.clip(raw_throttle, prev_throttle - MAX_THROTTLE_DIFF, prev_throttle + MAX_THROTTLE_DIFF)
+        
+        return [steering, throttle]
 
 if __name__ == "__main__":
     print("Starting as training server")
@@ -363,7 +369,7 @@ if __name__ == "__main__":
 
         if new_buffer[1] == False and prev_buffer > 0 and not trained:
             
-            if not args.load_model:
+            if not args.load_model or args.update_loaded_model:
                 print("Training")
                 agent.agent.update_parameters(GRADIENT_STEPS)
                 if len(agent.agent.replay_buffer.buffer) > args.total_steps:
