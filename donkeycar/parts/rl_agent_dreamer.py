@@ -28,6 +28,7 @@ parser.add_argument("--total_steps", help="Max steps for a run", default=50000, 
 parser.add_argument("--runs", help="How many runs to do", default=10, type=int)
 parser.add_argument("--load_model", help="Load pretrained model", default="")
 parser.add_argument("--save_model", help="File name to save model", default="")
+parser.add_argument("--update_loaded_model", action="store_true", help="Update the model")
 
 
 args = parser.parse_args()
@@ -38,6 +39,7 @@ if args.save_model and not os.path.isdir("./models"):
 MODEL_PATH = f"./models/{args.save_model}.pth"
 LOAD_MODEL = args.load_model
 SAVE_MODEL = args.save_model
+UPDATE_MODEL = args.update_loaded_model
 
 #DONKEY_NAME = args.car_name
 TRAINING_TIMEOUT = 300
@@ -303,7 +305,7 @@ class RL_Agent():
 
         if self.episode <= self.args.random_episodes:
             self.steering = np.random.normal(0, 1)
-            self.target_speed = 0.3
+            self.target_speed = 0.5
             self.action = torch.tensor([[self.steering, self.target_speed]], device=self.args.device)
         else:
 
@@ -394,11 +396,12 @@ if __name__ == "__main__":
 
     args = define_config()
     #wandb.config.update(args)
+    agent = RL_Agent("ari_dreamer", False, args.car_name)
 
     if LOAD_MODEL:
-        agent.agent = torch.load(LOAD_MODEL)
+        params = torch.load(LOAD_MODEL)
+        agent.agent.import_parameters(params)
 
-    agent = RL_Agent("ari_dreamer", False, args.car_name)
     params_sent = False
     buffer_received = False
     trained = False
@@ -423,7 +426,7 @@ if __name__ == "__main__":
 
         if new_buffer[1] == False and prev_buffer > 0 and not trained and epi >= args.prefill_episodes:  # add flag to prefill data
             print("Training")
-            if not LOAD_MODEL:
+            if not LOAD_MODEL or UPDATE_MODEL:
                 print("Training")
                 agent.agent.update_parameters(args.gradient_steps)
 
