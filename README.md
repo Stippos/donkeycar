@@ -89,7 +89,7 @@ cd donkeycar/donkeycar/parts
 conda activate donkey
 python rl_agent_sac.py
 ```
-On the donkeycar run
+On the Donkeycar run
 ```
 cd donkey_rl
 python manage.py
