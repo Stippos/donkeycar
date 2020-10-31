@@ -65,25 +65,21 @@ V.start(rate_hz=10)
 See [home page](http://donkeycar.com), [docs](http://docs.donkeycar.com)
 or join the [Discord server](http://www.donkeycar.com/community.html) to learn more.
 
-# Setting up Donkeycar and Donkey Simulator for Reinforcement learning
+# Setting up Donkeycar and Donkey Simulator for Reinforcement Learning
 
-Requirements:
+### Requirements:
 * Donkeycar with a RaspberryPi 4 board
 * IntelRealsense T265 tracking camera and the Python wrapper for the driver library installed on the RaspberryPi 4.
 * An additional computational resource with a GPU for training the RL models.
 
-Install this branch of donkeycar using the standard installation [instructions](http://docs.donkeycar.com/guide/install_software/) on the Donkeycar and on a GPU machine.
+### Installation:
 
-If you want to use the simulator, additionally install the [simulator pacakage](http://docs.donkeycar.com/guide/simulator/).
-
-Clone repos containing the [SAC](https://github.com/ari-viitala/RLDonkeyCar) and [Dreamer](https://github.com/AaltoVision/donkeycar-dreamer) agents.
-
-Edit `donkeycar/donkeycar/parts/rl_agent_sac.py` and `donkeycar/donkeycar/parts/rl_agent_dreamer.py` files such that they can import SAC and Dreamer modules respectively.
-
-On the Donkeycar create a donkeycar application by
-`donkey createcar --path ~/donkey_rl --template rl_local_control`
-
-If you are using the simulator, edit `~/donkey_rl/myconfig.py` according to the simulator instructions.
+* Install this branch of donkeycar using the standard installation [instructions](http://docs.donkeycar.com/guide/install_software/) on the Donkeycar and on a GPU machine.
+* If you want to use the simulator, additionally install the [simulator pacakage](http://docs.donkeycar.com/guide/simulator/).
+* Clone repos containing the [SAC](https://github.com/ari-viitala/RLDonkeyCar) and [Dreamer](https://github.com/AaltoVision/donkeycar-dreamer) agents.
+* Edit `donkeycar/donkeycar/parts/rl_agent_sac.py` and `donkeycar/donkeycar/parts/rl_agent_dreamer.py` files such that they can import SAC and Dreamer modules respectively.
+* On the Donkeycar create a donkeycar application by `donkey createcar --path ~/donkey_rl --template rl_local_control`.
+* If you are using the simulator, edit `~/donkey_rl/myconfig.py` according to the simulator instructions.
 
 ### Using SAC
 
