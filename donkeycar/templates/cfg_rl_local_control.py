@@ -21,7 +21,7 @@ DATA_PATH = os.path.join(CAR_PATH, 'data')
 MODELS_PATH = os.path.join(CAR_PATH, 'models')
 
 #REMOTE CONTROL
-DONKEY_UNIQUE_NAME = "Kari"
+DONKEY_UNIQUE_NAME = "RL_Donkey"
 MQTT_BROKER = "mqtt.eclipse.org"
 
 #REALSENSE

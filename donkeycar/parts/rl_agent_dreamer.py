@@ -53,7 +53,7 @@ class AttrDict(dict):
 def define_config():
 	args = AttrDict()
 	# parameter for dreamer
-	args.car_name = "ari_dreamer"
+	args.car_name = "RL_Donkey"
 	args.episodes_steps = 1000
 	args.episodes = 100
 
@@ -88,9 +88,9 @@ def define_config():
 	args.expl_amount = 0.3  # action noise
 
 	# for action constrains
-	args.throttle_base = 0.5  # fixed throttle base
-	args.throttle_min = 0.1
-	args.throttle_max = 0.5
+	args.throttle_base = 0  # fixed throttle base
+	args.throttle_min = -1
+	args.throttle_max = 1
 	args.angle_min = -1
 	args.angle_max = 1
 	# I didn't limit the max steering_diff yet
@@ -109,7 +109,7 @@ def define_config():
 	# set up for experiments
 	args.pcont = False  # whether to use a learned pcont
 	args.with_logprob = False  # whether to use the soft actor-critic
-	args.fix_speed = True  # whether to use fixed speed, fixed speed is 0.3
+	args.fix_speed = False  # whether to use fixed speed, fixed speed is 0.3
 
 	args.temp = 0.003
 	return args
