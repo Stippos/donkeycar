@@ -7,7 +7,7 @@
 
 ### Installation:
 
-* Install this branch of donkeycar using the standard installation [instructions](http://docs.donkeycar.com/guide/install_software/) on the Donkeycar and on a GPU machine.
+* Install this fork of donkeycar-package using the standard installation [instructions](http://docs.donkeycar.com/guide/install_software/) on the Donkeycar and on a GPU machine.
 * If you want to use the simulator, additionally install the [simulator pacakage](http://docs.donkeycar.com/guide/simulator/).
 * Clone repos containing the [SAC](https://github.com/ari-viitala/RLDonkeyCar) and [Dreamer](https://github.com/AaltoVision/donkeycar-dreamer) agents.
 * Edit `donkeycar/donkeycar/parts/rl_agent_sac.py` and `donkeycar/donkeycar/parts/rl_agent_dreamer.py` files such that they can import SAC and Dreamer modules respectively.
