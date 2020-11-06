@@ -12,7 +12,7 @@
 * Clone repos containing the [SAC](https://github.com/ari-viitala/RLDonkeyCar) and [Dreamer](https://github.com/AaltoVision/donkeycar-dreamer) agents.
 * Edit `donkeycar/donkeycar/parts/rl_agent_sac.py` and `donkeycar/donkeycar/parts/rl_agent_dreamer.py` files such that they can import SAC and Dreamer modules respectively.
 * On the Donkeycar create a donkeycar application by `donkey createcar --path ~/donkey_rl --template rl_local_control`.
-* If you are using the simulator, edit `~/donkey_rl/myconfig.py` according to the simulator instructions.
+* If you are using the simulator, edit `~/donkey_rl/myconfig.py` according to the simulator instructions. In the experiments we used this [version](https://github.com/tawnkramer/gym-donkeycar/releases/tag/v20.9.14) of the simulator.
 
 ### Using SAC
 
